@@ -2,6 +2,7 @@ package tools
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 
 	"github.com/cockroachdb/errors"
@@ -15,6 +16,9 @@ var ErrFilenameOrMetainfoRequired = errors.New("either filename (magnet/URL) or 
 
 // ErrFilenameAndMetainfoConflict is returned when both filename and metainfo are provided.
 var ErrFilenameAndMetainfoConflict = errors.New("filename and metainfo are mutually exclusive, provide only one")
+
+// ErrInvalidBase64Metainfo is returned when metainfo is not valid base64.
+var ErrInvalidBase64Metainfo = errors.New("metainfo must be valid base64-encoded .torrent file content")
 
 // TorrentAddParams defines the parameters for the transmission_torrent_add tool.
 type TorrentAddParams struct {
@@ -49,6 +53,14 @@ func NewTorrentAddHandler(client transmission.Client) mcp.ToolHandlerFor[Torrent
 		if params.Filename != "" && params.Metainfo != "" {
 			return &mcp.CallToolResult{IsError: true}, TorrentAddResult{},
 				validationErr(ErrFilenameAndMetainfoConflict)
+		}
+
+		if params.Metainfo != "" {
+			_, decodeErr := base64.StdEncoding.DecodeString(params.Metainfo)
+			if decodeErr != nil {
+				return &mcp.CallToolResult{IsError: true}, TorrentAddResult{},
+					validationErr(ErrInvalidBase64Metainfo)
+			}
 		}
 
 		args := buildTorrentAddArgs(&params)

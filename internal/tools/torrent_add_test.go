@@ -138,6 +138,20 @@ func TestTorrentAddHandler_TransmissionError(t *testing.T) {
 	}
 }
 
+func TestTorrentAddHandler_InvalidBase64Metainfo(t *testing.T) {
+	client := newMockClient()
+	handler := tools.NewTorrentAddHandler(client)
+
+	params := tools.TorrentAddParams{
+		Metainfo: "not-valid-base64!!!",
+	}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrValidation) {
+		t.Errorf("expected ErrValidation for invalid base64, got: %v", err)
+	}
+}
+
 func TestTorrentAddHandler_ConflictingParams(t *testing.T) {
 	client := newMockClient()
 	handler := tools.NewTorrentAddHandler(client)
