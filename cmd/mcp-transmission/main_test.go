@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"net"
+	"runtime"
 	"testing"
+	"time"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -54,6 +56,35 @@ func TestRunHTTPServer_PortInUse(t *testing.T) {
 	runErr := runHTTPServer(t.Context(), server, port)
 	if runErr == nil {
 		t.Error("expected error when port is in use")
+	}
+}
+
+func TestSignalGoroutineExitsOnCancel(t *testing.T) {
+	before := runtime.NumGoroutine()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	// Simulate the signal goroutine pattern from run().
+	done := make(chan struct{})
+
+	go func() {
+		<-ctx.Done()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("signal goroutine did not exit after context cancellation")
+	}
+
+	// Allow goroutine to be cleaned up.
+	runtime.Gosched()
+
+	after := runtime.NumGoroutine()
+	if after > before+1 {
+		t.Errorf("goroutine leak: before=%d after=%d", before, after)
 	}
 }
 

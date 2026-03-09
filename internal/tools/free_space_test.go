@@ -54,3 +54,15 @@ func TestFreeSpaceHandler_MissingPath(t *testing.T) {
 		t.Errorf("expected ErrValidation, got: %v", err)
 	}
 }
+
+func TestFreeSpaceHandler_RelativePath(t *testing.T) {
+	client := newMockClient()
+	handler := tools.NewFreeSpaceHandler(client)
+
+	params := tools.FreeSpaceParams{Path: "relative/dir"}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrValidation) {
+		t.Errorf("expected ErrValidation for relative path, got: %v", err)
+	}
+}

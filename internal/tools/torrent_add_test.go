@@ -167,6 +167,29 @@ func TestTorrentAddHandler_ConflictingParams(t *testing.T) {
 	}
 }
 
+func TestTorrentAddHandler_RelativeDownloadDir(t *testing.T) {
+	client := newMockClient()
+	client.torrentAddResult = &transmission.TorrentAddResult{
+		TorrentAdded: &transmission.TorrentAddedInfo{
+			ID:         1,
+			Name:       "test",
+			HashString: "abc",
+		},
+	}
+
+	handler := tools.NewTorrentAddHandler(client)
+
+	params := tools.TorrentAddParams{
+		Filename:    "magnet:?xt=urn:btih:abc123",
+		DownloadDir: "relative/path",
+	}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrValidation) {
+		t.Errorf("expected ErrValidation for relative downloadDir, got: %v", err)
+	}
+}
+
 func TestTorrentAddHandler_MissingParams(t *testing.T) {
 	client := newMockClient()
 	handler := tools.NewTorrentAddHandler(client)
