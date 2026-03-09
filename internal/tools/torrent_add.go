@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"path/filepath"
 
 	"github.com/cockroachdb/errors"
 
@@ -61,6 +62,11 @@ func NewTorrentAddHandler(client transmission.Client) mcp.ToolHandlerFor[Torrent
 				return &mcp.CallToolResult{IsError: true}, TorrentAddResult{},
 					validationErr(ErrInvalidBase64Metainfo)
 			}
+		}
+
+		if params.DownloadDir != "" && !filepath.IsAbs(params.DownloadDir) {
+			return &mcp.CallToolResult{IsError: true}, TorrentAddResult{},
+				validationErr(ErrAbsolutePathRequired)
 		}
 
 		args := buildTorrentAddArgs(&params)
