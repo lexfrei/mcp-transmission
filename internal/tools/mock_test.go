@@ -12,6 +12,7 @@ var errMock = errors.New("mock error")
 // mockClient implements transmission.Client for testing.
 type mockClient struct {
 	err              error
+	lastMethod       string
 	torrentGetResult *transmission.TorrentGetResult
 	torrentAddResult *transmission.TorrentAddResult
 	portTestResult   bool
@@ -27,15 +28,25 @@ func newMockClient() *mockClient {
 	return &mockClient{}
 }
 
+func (m *mockClient) LastMethod() string {
+	return m.lastMethod
+}
+
 func (m *mockClient) TorrentStart(_ context.Context, _ []int64) error {
+	m.lastMethod = "TorrentStart"
+
 	return m.err
 }
 
 func (m *mockClient) TorrentStartNow(_ context.Context, _ []int64) error {
+	m.lastMethod = "TorrentStartNow"
+
 	return m.err
 }
 
 func (m *mockClient) TorrentStop(_ context.Context, _ []int64) error {
+	m.lastMethod = "TorrentStop"
+
 	return m.err
 }
 

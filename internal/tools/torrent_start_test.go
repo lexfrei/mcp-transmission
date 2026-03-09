@@ -31,6 +31,10 @@ func TestTorrentStartHandler_Success(t *testing.T) {
 	if result != nil && result.IsError {
 		t.Error("expected success")
 	}
+
+	if client.LastMethod() != "TorrentStart" {
+		t.Errorf("expected TorrentStart, got %s", client.LastMethod())
+	}
 }
 
 func TestTorrentStartHandler_Now(t *testing.T) {
@@ -46,6 +50,10 @@ func TestTorrentStartHandler_Now(t *testing.T) {
 
 	if result != nil && result.IsError {
 		t.Error("expected success")
+	}
+
+	if client.LastMethod() != "TorrentStartNow" {
+		t.Errorf("expected TorrentStartNow, got %s", client.LastMethod())
 	}
 }
 
