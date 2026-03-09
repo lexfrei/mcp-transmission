@@ -72,8 +72,13 @@ func run() error {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		<-sigChan
-		cancel()
+		select {
+		case <-sigChan:
+			cancel()
+		case <-ctx.Done():
+		}
+
+		signal.Stop(sigChan)
 	}()
 
 	group, groupCtx := errgroup.WithContext(ctx)
@@ -135,6 +140,9 @@ func registerTools(server *mcp.Server, client transmission.Client) {
 	mcp.AddTool(server, tools.BandwidthGroupGetTool(), tools.NewBandwidthGroupGetHandler(client))
 }
 
+// runHTTPServer starts an HTTP/SSE transport for the MCP server.
+// Sharing a single *mcp.Server across transports is safe: the SDK
+// protects internal state (sessions, tools, subscriptions) with a sync.Mutex.
 func runHTTPServer(ctx context.Context, server *mcp.Server, port string) error {
 	handler := mcp.NewStreamableHTTPHandler(
 		func(_ *http.Request) *mcp.Server {
