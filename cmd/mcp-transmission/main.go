@@ -53,24 +53,13 @@ func run() error {
 
 	defer client.Close()
 
+	serverOpts := newServerOptions()
 	server := mcp.NewServer(
 		&mcp.Implementation{
 			Name:    serverName,
 			Version: version,
 		},
-		&mcp.ServerOptions{
-			Instructions: "MCP server for managing Transmission BitTorrent client. " +
-				"Provides tools to list, add, remove, start, stop torrents, " +
-				"view detailed torrent info, manage queue and bandwidth groups, " +
-				"check session stats and configuration, test port accessibility, " +
-				"and check free disk space. " +
-				"Requires TRANSMISSION_URL environment variable " +
-				"(defaults to http://localhost:9091/transmission/rpc). " +
-				"Supports basic auth via TRANSMISSION_USERNAME/TRANSMISSION_PASSWORD.",
-			Logger: slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-				Level: slog.LevelInfo,
-			})),
-		},
+		serverOpts,
 	)
 
 	registerTools(server, client)
@@ -86,16 +75,45 @@ func run() error {
 		cancel()
 	}()
 
+	httpErrCh := make(chan error, 1)
+
 	if cfg.HTTPEnabled() {
-		go runHTTPServer(ctx, server, cfg.HTTPPort)
+		go func() {
+			httpErrCh <- runHTTPServer(ctx, server, cfg.HTTPPort)
+		}()
 	}
 
 	runErr := server.Run(ctx, &mcp.StdioTransport{})
+
+	select {
+	case httpErr := <-httpErrCh:
+		if httpErr != nil {
+			return errors.Wrap(httpErr, "HTTP server failed")
+		}
+	default:
+	}
+
 	if runErr != nil && ctx.Err() == nil {
 		return errors.Wrap(runErr, "server run failed")
 	}
 
 	return nil
+}
+
+func newServerOptions() *mcp.ServerOptions {
+	return &mcp.ServerOptions{
+		Instructions: "MCP server for managing Transmission BitTorrent client. " +
+			"Provides tools to list, add, remove, start, stop torrents, " +
+			"view detailed torrent info, manage queue and bandwidth groups, " +
+			"check session stats and configuration, test port accessibility, " +
+			"and check free disk space. " +
+			"Requires TRANSMISSION_URL environment variable " +
+			"(defaults to http://localhost:9091/transmission/rpc). " +
+			"Supports basic auth via TRANSMISSION_USERNAME/TRANSMISSION_PASSWORD.",
+		Logger: slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+			Level: slog.LevelInfo,
+		})),
+	}
 }
 
 func registerTools(server *mcp.Server, client transmission.Client) {
@@ -119,7 +137,7 @@ func registerTools(server *mcp.Server, client transmission.Client) {
 	mcp.AddTool(server, tools.BandwidthGroupGetTool(), tools.NewBandwidthGroupGetHandler(client))
 }
 
-func runHTTPServer(ctx context.Context, server *mcp.Server, port string) {
+func runHTTPServer(ctx context.Context, server *mcp.Server, port string) error {
 	handler := mcp.NewStreamableHTTPHandler(
 		func(_ *http.Request) *mcp.Server {
 			return server
@@ -148,8 +166,10 @@ func runHTTPServer(ctx context.Context, server *mcp.Server, port string) {
 
 	log.Printf("HTTP server listening on :%s", port)
 
-	err := httpServer.ListenAndServe()
-	if !errors.Is(err, http.ErrServerClosed) {
-		log.Printf("HTTP server error: %v", err)
+	listenErr := httpServer.ListenAndServe()
+	if errors.Is(listenErr, http.ErrServerClosed) {
+		return nil
 	}
+
+	return errors.Wrap(listenErr, "HTTP listen failed")
 }

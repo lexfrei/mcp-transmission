@@ -82,6 +82,42 @@ func TestTorrentAddHandler_Duplicate(t *testing.T) {
 	}
 }
 
+func TestTorrentAddHandler_BothNilResult(t *testing.T) {
+	client := newMockClient()
+	client.torrentAddResult = &transmission.TorrentAddResult{}
+
+	handler := tools.NewTorrentAddHandler(client)
+
+	params := tools.TorrentAddParams{
+		Filename: "magnet:?xt=urn:btih:abc123",
+	}
+
+	_, output, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if err != nil {
+		t.Fatalf("handler failed: %v", err)
+	}
+
+	if output.Message != "Torrent added (no details returned)" {
+		t.Errorf("expected fallback message, got: %s", output.Message)
+	}
+}
+
+func TestTorrentAddHandler_TransmissionError(t *testing.T) {
+	client := newMockClient()
+	client.err = errMock
+
+	handler := tools.NewTorrentAddHandler(client)
+
+	params := tools.TorrentAddParams{
+		Filename: "magnet:?xt=urn:btih:abc123",
+	}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrTransmission) {
+		t.Errorf("expected ErrTransmission, got: %v", err)
+	}
+}
+
 func TestTorrentAddHandler_MissingParams(t *testing.T) {
 	client := newMockClient()
 	handler := tools.NewTorrentAddHandler(client)

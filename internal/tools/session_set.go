@@ -4,9 +4,14 @@ import (
 	"context"
 	"strings"
 
+	"github.com/cockroachdb/errors"
+
 	"github.com/lexfrei/go-transmission/api/transmission"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
+
+// ErrNoSessionChanges is returned when no session parameters are provided.
+var ErrNoSessionChanges = errors.New("at least one session parameter must be provided")
 
 // SessionSetParams defines the parameters for the transmission_session_set tool.
 type SessionSetParams struct {
@@ -36,6 +41,11 @@ func NewSessionSetHandler(
 		_ *mcp.CallToolRequest,
 		params SessionSetParams,
 	) (*mcp.CallToolResult, SessionSetResult, error) {
+		if !hasSessionChanges(&params) {
+			return &mcp.CallToolResult{IsError: true}, SessionSetResult{},
+				validationErr(ErrNoSessionChanges)
+		}
+
 		args := buildSessionSetArgs(&params)
 
 		err := client.SessionSet(ctx, args)
@@ -56,6 +66,19 @@ func SessionSetTool() *mcp.Tool {
 		Name:        "transmission_session_set",
 		Description: "Modify Transmission session settings: speed limits, alt speed (turtle mode), download directory, peer limits",
 	}
+}
+
+func hasSessionChanges(params *SessionSetParams) bool {
+	return params.SpeedLimitDown != nil ||
+		params.SpeedLimitDownEnabled != nil ||
+		params.SpeedLimitUp != nil ||
+		params.SpeedLimitUpEnabled != nil ||
+		params.AltSpeedDown != nil ||
+		params.AltSpeedUp != nil ||
+		params.AltSpeedEnabled != nil ||
+		params.DownloadDir != nil ||
+		params.PeerLimitGlobal != nil ||
+		params.PeerLimitPerTorrent != nil
 }
 
 func buildSessionSetArgs(params *SessionSetParams) *transmission.SessionSetArgs {

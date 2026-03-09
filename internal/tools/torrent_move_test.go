@@ -37,6 +37,23 @@ func TestTorrentMoveHandler_Success(t *testing.T) {
 	}
 }
 
+func TestTorrentMoveHandler_TransmissionError(t *testing.T) {
+	client := newMockClient()
+	client.err = errMock
+
+	handler := tools.NewTorrentMoveHandler(client)
+
+	params := tools.TorrentMoveParams{
+		IDs:      []int64{1},
+		Location: "/new/path",
+	}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrTransmission) {
+		t.Errorf("expected ErrTransmission, got: %v", err)
+	}
+}
+
 func TestTorrentMoveHandler_MissingIDs(t *testing.T) {
 	client := newMockClient()
 	handler := tools.NewTorrentMoveHandler(client)

@@ -13,6 +13,10 @@ const (
 
 // formatBytes formats bytes into human-readable form.
 func formatBytes(bytes int64) string {
+	if bytes < 0 {
+		return "unknown"
+	}
+
 	switch {
 	case bytes >= bytesPerTB:
 		return fmt.Sprintf("%.2f TB", float64(bytes)/float64(bytesPerTB))

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/cockroachdb/errors"
+
 	"github.com/lexfrei/mcp-transmission/internal/tools"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -34,6 +35,24 @@ func TestTorrentSetHandler_Success(t *testing.T) {
 
 	if result != nil && result.IsError {
 		t.Error("expected success")
+	}
+}
+
+func TestTorrentSetHandler_TransmissionError(t *testing.T) {
+	client := newMockClient()
+	client.err = errMock
+
+	handler := tools.NewTorrentSetHandler(client)
+
+	limit := int64(500)
+	params := tools.TorrentSetParams{
+		IDs:           []int64{1},
+		DownloadLimit: &limit,
+	}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrTransmission) {
+		t.Errorf("expected ErrTransmission, got: %v", err)
 	}
 }
 
