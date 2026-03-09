@@ -13,6 +13,9 @@ import (
 // ErrNoSessionChanges is returned when no session parameters are provided.
 var ErrNoSessionChanges = errors.New("at least one session parameter must be provided")
 
+// ErrEmptyDownloadDir is returned when downloadDir is an empty string.
+var ErrEmptyDownloadDir = errors.New("downloadDir must not be empty")
+
 // SessionSetParams defines the parameters for the transmission_session_set tool.
 type SessionSetParams struct {
 	SpeedLimitDown        *int64  `json:"speedLimitDown,omitempty"        jsonschema:"Download speed limit in KB/s"`
@@ -109,6 +112,10 @@ func validateSessionLimits(params *SessionSetParams) error {
 
 	if params.PeerLimitPerTorrent != nil && *params.PeerLimitPerTorrent < 0 {
 		return validationErr(ErrNegativeLimit)
+	}
+
+	if params.DownloadDir != nil && *params.DownloadDir == "" {
+		return validationErr(ErrEmptyDownloadDir)
 	}
 
 	return nil

@@ -52,6 +52,21 @@ func TestSessionSetHandler_EmptyParams(t *testing.T) {
 	}
 }
 
+func TestSessionSetHandler_EmptyDownloadDir(t *testing.T) {
+	client := newMockClient()
+	handler := tools.NewSessionSetHandler(client)
+
+	empty := ""
+	params := tools.SessionSetParams{
+		DownloadDir: &empty,
+	}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrValidation) {
+		t.Errorf("expected ErrValidation for empty downloadDir, got: %v", err)
+	}
+}
+
 func TestSessionSetHandler_NegativeSpeedLimit(t *testing.T) {
 	client := newMockClient()
 	handler := tools.NewSessionSetHandler(client)
