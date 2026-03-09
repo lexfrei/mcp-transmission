@@ -63,7 +63,7 @@ Add to your `.mcp.json`:
         "-e", "TRANSMISSION_URL",
         "-e", "TRANSMISSION_USERNAME",
         "-e", "TRANSMISSION_PASSWORD",
-        "ghcr.io/lexfrei/mcp-transmission:latest"
+        "mcp-transmission:latest"
       ],
       "env": {
         "TRANSMISSION_URL": "http://host.docker.internal:9091/transmission/rpc"
@@ -72,6 +72,8 @@ Add to your `.mcp.json`:
   }
 }
 ```
+
+Build the image first: `docker build --file Containerfile --tag mcp-transmission:latest .`
 
 Set `TRANSMISSION_USERNAME` and `TRANSMISSION_PASSWORD` as environment variables on your host if your Transmission instance requires authentication. They are passed through to the container via `-e` flags.
 
