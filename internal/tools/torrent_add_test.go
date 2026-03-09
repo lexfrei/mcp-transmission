@@ -138,6 +138,21 @@ func TestTorrentAddHandler_TransmissionError(t *testing.T) {
 	}
 }
 
+func TestTorrentAddHandler_ConflictingParams(t *testing.T) {
+	client := newMockClient()
+	handler := tools.NewTorrentAddHandler(client)
+
+	params := tools.TorrentAddParams{
+		Filename: "magnet:?xt=urn:btih:abc123",
+		Metainfo: "base64data",
+	}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrValidation) {
+		t.Errorf("expected ErrValidation for conflicting params, got: %v", err)
+	}
+}
+
 func TestTorrentAddHandler_MissingParams(t *testing.T) {
 	client := newMockClient()
 	handler := tools.NewTorrentAddHandler(client)

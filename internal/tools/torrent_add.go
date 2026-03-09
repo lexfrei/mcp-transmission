@@ -13,6 +13,9 @@ import (
 // ErrFilenameOrMetainfoRequired is returned when neither filename nor metainfo is provided.
 var ErrFilenameOrMetainfoRequired = errors.New("either filename (magnet/URL) or metainfo (base64 .torrent) is required")
 
+// ErrFilenameAndMetainfoConflict is returned when both filename and metainfo are provided.
+var ErrFilenameAndMetainfoConflict = errors.New("filename and metainfo are mutually exclusive, provide only one")
+
 // TorrentAddParams defines the parameters for the transmission_torrent_add tool.
 type TorrentAddParams struct {
 	Filename    string   `json:"filename,omitempty"    jsonschema:"Magnet link, URL, or torrent file path"`
@@ -41,6 +44,11 @@ func NewTorrentAddHandler(client transmission.Client) mcp.ToolHandlerFor[Torrent
 		if params.Filename == "" && params.Metainfo == "" {
 			return &mcp.CallToolResult{IsError: true}, TorrentAddResult{},
 				validationErr(ErrFilenameOrMetainfoRequired)
+		}
+
+		if params.Filename != "" && params.Metainfo != "" {
+			return &mcp.CallToolResult{IsError: true}, TorrentAddResult{},
+				validationErr(ErrFilenameAndMetainfoConflict)
 		}
 
 		args := buildTorrentAddArgs(&params)
