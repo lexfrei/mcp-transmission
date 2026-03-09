@@ -56,6 +56,18 @@ func TestTorrentSetHandler_TransmissionError(t *testing.T) {
 	}
 }
 
+func TestTorrentSetHandler_EmptyChanges(t *testing.T) {
+	client := newMockClient()
+	handler := tools.NewTorrentSetHandler(client)
+
+	params := tools.TorrentSetParams{IDs: []int64{1}}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrValidation) {
+		t.Errorf("expected ErrValidation for empty changes, got: %v", err)
+	}
+}
+
 func TestTorrentSetHandler_MissingIDs(t *testing.T) {
 	client := newMockClient()
 	handler := tools.NewTorrentSetHandler(client)

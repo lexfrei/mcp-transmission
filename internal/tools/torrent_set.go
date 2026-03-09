@@ -4,9 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/cockroachdb/errors"
+
 	"github.com/lexfrei/go-transmission/api/transmission"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
+
+// ErrNoTorrentChanges is returned when no torrent parameters are provided.
+var ErrNoTorrentChanges = errors.New("at least one torrent parameter must be provided")
 
 // TorrentSetParams defines the parameters for the transmission_torrent_set tool.
 type TorrentSetParams struct {
@@ -37,6 +42,11 @@ func NewTorrentSetHandler(client transmission.Client) mcp.ToolHandlerFor[Torrent
 				validationErr(ErrIDsRequired)
 		}
 
+		if !hasTorrentChanges(&params) {
+			return &mcp.CallToolResult{IsError: true}, TorrentSetResult{},
+				validationErr(ErrNoTorrentChanges)
+		}
+
 		args := buildTorrentSetArgs(&params)
 
 		err := client.TorrentSet(ctx, params.IDs, args)
@@ -57,6 +67,16 @@ func TorrentSetTool() *mcp.Tool {
 		Name:        "transmission_torrent_set",
 		Description: "Modify properties of one or more torrents (speed limits, labels, seed ratio, etc.)",
 	}
+}
+
+func hasTorrentChanges(params *TorrentSetParams) bool {
+	return params.DownloadLimit != nil ||
+		params.DownloadLimited != nil ||
+		params.UploadLimit != nil ||
+		params.UploadLimited != nil ||
+		len(params.Labels) > 0 ||
+		params.SeedRatioLimit != nil ||
+		params.QueuePosition != nil
 }
 
 func buildTorrentSetArgs(params *TorrentSetParams) *transmission.TorrentSetArgs {
