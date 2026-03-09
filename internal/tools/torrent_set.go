@@ -84,6 +84,10 @@ func validateTorrentLimits(params *TorrentSetParams) error {
 		return validationErr(ErrNegativeLimit)
 	}
 
+	if params.SeedRatioLimit != nil && *params.SeedRatioLimit < 0 {
+		return validationErr(ErrNegativeLimit)
+	}
+
 	return nil
 }
 

@@ -56,6 +56,45 @@ func TestTorrentSetHandler_TransmissionError(t *testing.T) {
 	}
 }
 
+func TestTorrentSetHandler_NegativeSeedRatioLimit(t *testing.T) {
+	client := newMockClient()
+	handler := tools.NewTorrentSetHandler(client)
+
+	neg := -1.0
+	params := tools.TorrentSetParams{
+		IDs:            []int64{1},
+		SeedRatioLimit: &neg,
+	}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrValidation) {
+		t.Errorf("expected ErrValidation for negative seed ratio, got: %v", err)
+	}
+}
+
+func TestTorrentSetHandler_ClearLabelsArgs(t *testing.T) {
+	client := newMockClient()
+	handler := tools.NewTorrentSetHandler(client)
+
+	params := tools.TorrentSetParams{
+		IDs:         []int64{1},
+		ClearLabels: true,
+	}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if err != nil {
+		t.Fatalf("handler failed: %v", err)
+	}
+
+	if client.lastSetArgs == nil {
+		t.Fatal("expected lastSetArgs to be set")
+	}
+
+	if client.lastSetArgs.Labels == nil || len(client.lastSetArgs.Labels) != 0 {
+		t.Errorf("expected empty labels slice, got: %v", client.lastSetArgs.Labels)
+	}
+}
+
 func TestTorrentSetHandler_NegativeDownloadLimit(t *testing.T) {
 	client := newMockClient()
 	handler := tools.NewTorrentSetHandler(client)
