@@ -13,6 +13,8 @@ var errMock = errors.New("mock error")
 type mockClient struct {
 	err              error
 	lastMethod       string
+	lastSetArgs      *transmission.TorrentSetArgs
+	lastSessionArgs  *transmission.SessionSetArgs
 	torrentGetResult *transmission.TorrentGetResult
 	torrentAddResult *transmission.TorrentAddResult
 	portTestResult   bool
@@ -95,8 +97,10 @@ func (m *mockClient) TorrentGetRecentlyActive(
 func (m *mockClient) TorrentSet(
 	_ context.Context,
 	_ []int64,
-	_ *transmission.TorrentSetArgs,
+	args *transmission.TorrentSetArgs,
 ) error {
+	m.lastSetArgs = args
+
 	return m.err
 }
 
@@ -149,8 +153,10 @@ func (m *mockClient) SessionGet(
 
 func (m *mockClient) SessionSet(
 	_ context.Context,
-	_ *transmission.SessionSetArgs,
+	args *transmission.SessionSetArgs,
 ) error {
+	m.lastSessionArgs = args
+
 	return m.err
 }
 
