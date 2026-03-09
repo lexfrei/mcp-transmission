@@ -36,7 +36,10 @@ func main() {
 }
 
 func run() error {
-	cfg := config.Load()
+	cfg, cfgErr := config.Load()
+	if cfgErr != nil {
+		return errors.Wrap(cfgErr, "invalid configuration")
+	}
 
 	opts := []transmission.Option{}
 	if cfg.HasAuth() {
@@ -130,15 +133,16 @@ func runHTTPServer(ctx context.Context, server *mcp.Server, port string) {
 		ReadHeaderTimeout: readHeaderTimeout,
 	}
 
+	//nolint:gosec // G118: ctx is already cancelled when goroutine runs, must use fresh context for graceful shutdown.
 	go func() {
 		<-ctx.Done()
 
-		shutdownCtx, shutdownCancel := context.WithTimeout(ctx, shutdownTimeout)
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer shutdownCancel()
 
-		err := httpServer.Shutdown(shutdownCtx)
-		if err != nil {
-			log.Printf("HTTP server shutdown error: %v", err)
+		shutdownErr := httpServer.Shutdown(shutdownCtx) //nolint:contextcheck // ctx is cancelled, need fresh context for graceful shutdown.
+		if shutdownErr != nil {
+			log.Printf("HTTP server shutdown error: %v", shutdownErr)
 		}
 	}()
 
