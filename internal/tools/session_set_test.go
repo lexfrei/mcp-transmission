@@ -98,3 +98,18 @@ func TestSessionSetHandler_TransmissionError(t *testing.T) {
 		t.Errorf("expected ErrTransmission, got: %v", err)
 	}
 }
+
+func TestSessionSetHandler_RelativeDownloadDir(t *testing.T) {
+	client := newMockClient()
+	handler := tools.NewSessionSetHandler(client)
+
+	rel := "relative/path"
+	params := tools.SessionSetParams{
+		DownloadDir: &rel,
+	}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrValidation) {
+		t.Errorf("expected ErrValidation for relative path, got: %v", err)
+	}
+}

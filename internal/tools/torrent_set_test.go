@@ -142,6 +142,22 @@ func TestTorrentSetHandler_EmptyChanges(t *testing.T) {
 	}
 }
 
+func TestTorrentSetHandler_NegativeQueuePosition(t *testing.T) {
+	client := newMockClient()
+	handler := tools.NewTorrentSetHandler(client)
+
+	neg := -1
+	params := tools.TorrentSetParams{
+		IDs:           []int64{1},
+		QueuePosition: &neg,
+	}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrValidation) {
+		t.Errorf("expected ErrValidation for negative queue position, got: %v", err)
+	}
+}
+
 func TestTorrentSetHandler_MissingIDs(t *testing.T) {
 	client := newMockClient()
 	handler := tools.NewTorrentSetHandler(client)

@@ -58,3 +58,23 @@ func TestSessionStatsHandler_Error(t *testing.T) {
 		t.Error("expected error")
 	}
 }
+
+func TestSessionStatsHandler_NilResult(t *testing.T) {
+	client := newMockClient()
+	client.sessionStats = nil
+
+	handler := tools.NewSessionStatsHandler(client)
+
+	result, output, err := handler(context.Background(), &mcp.CallToolRequest{}, tools.SessionStatsParams{})
+	if err != nil {
+		t.Fatalf("handler failed: %v", err)
+	}
+
+	if result != nil && result.IsError {
+		t.Error("expected success")
+	}
+
+	if output.Output == "" {
+		t.Error("expected non-empty output for nil stats")
+	}
+}

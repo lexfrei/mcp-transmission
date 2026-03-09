@@ -77,3 +77,18 @@ func TestTorrentMoveHandler_MissingLocation(t *testing.T) {
 		t.Errorf("expected ErrValidation, got: %v", err)
 	}
 }
+
+func TestTorrentMoveHandler_RelativePath(t *testing.T) {
+	client := newMockClient()
+	handler := tools.NewTorrentMoveHandler(client)
+
+	params := tools.TorrentMoveParams{
+		IDs:      []int64{1},
+		Location: "relative/path",
+	}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrValidation) {
+		t.Errorf("expected ErrValidation for relative path, got: %v", err)
+	}
+}

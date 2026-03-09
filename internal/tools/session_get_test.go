@@ -54,3 +54,23 @@ func TestSessionGetHandler_Error(t *testing.T) {
 		t.Error("expected error")
 	}
 }
+
+func TestSessionGetHandler_NilResult(t *testing.T) {
+	client := newMockClient()
+	client.sessionResult = nil
+
+	handler := tools.NewSessionGetHandler(client)
+
+	result, output, err := handler(context.Background(), &mcp.CallToolRequest{}, tools.SessionGetParams{})
+	if err != nil {
+		t.Fatalf("handler failed: %v", err)
+	}
+
+	if result != nil && result.IsError {
+		t.Error("expected success")
+	}
+
+	if output.Output == "" {
+		t.Error("expected non-empty output for nil session")
+	}
+}
