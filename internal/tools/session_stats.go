@@ -37,6 +37,10 @@ func NewSessionStatsHandler(
 				transmissionErr("failed to get session stats", err)
 		}
 
+		if stats == nil {
+			return nil, SessionStatsResult{Output: "No stats data returned"}, nil
+		}
+
 		result := SessionStatsResult{
 			ActiveTorrents: stats.ActiveTorrentCount,
 			PausedTorrents: stats.PausedTorrentCount,

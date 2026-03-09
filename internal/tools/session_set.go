@@ -2,6 +2,7 @@ package tools
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 
 	"github.com/cockroachdb/errors"
@@ -90,6 +91,31 @@ func hasSessionChanges(params *SessionSetParams) bool {
 }
 
 func validateSessionLimits(params *SessionSetParams) error {
+	speedErr := validateSessionSpeedLimits(params)
+	if speedErr != nil {
+		return speedErr
+	}
+
+	if params.PeerLimitGlobal != nil && *params.PeerLimitGlobal < 0 {
+		return validationErr(ErrNegativeLimit)
+	}
+
+	if params.PeerLimitPerTorrent != nil && *params.PeerLimitPerTorrent < 0 {
+		return validationErr(ErrNegativeLimit)
+	}
+
+	if params.DownloadDir != nil && *params.DownloadDir == "" {
+		return validationErr(ErrEmptyDownloadDir)
+	}
+
+	if params.DownloadDir != nil && !filepath.IsAbs(*params.DownloadDir) {
+		return validationErr(ErrAbsolutePathRequired)
+	}
+
+	return nil
+}
+
+func validateSessionSpeedLimits(params *SessionSetParams) error {
 	if params.SpeedLimitDown != nil && *params.SpeedLimitDown < 0 {
 		return validationErr(ErrNegativeLimit)
 	}
@@ -104,18 +130,6 @@ func validateSessionLimits(params *SessionSetParams) error {
 
 	if params.AltSpeedUp != nil && *params.AltSpeedUp < 0 {
 		return validationErr(ErrNegativeLimit)
-	}
-
-	if params.PeerLimitGlobal != nil && *params.PeerLimitGlobal < 0 {
-		return validationErr(ErrNegativeLimit)
-	}
-
-	if params.PeerLimitPerTorrent != nil && *params.PeerLimitPerTorrent < 0 {
-		return validationErr(ErrNegativeLimit)
-	}
-
-	if params.DownloadDir != nil && *params.DownloadDir == "" {
-		return validationErr(ErrEmptyDownloadDir)
 	}
 
 	return nil

@@ -32,6 +32,10 @@ func NewSessionGetHandler(
 				transmissionErr("failed to get session config", err)
 		}
 
+		if session == nil {
+			return nil, SessionGetResult{Output: "No session data returned"}, nil
+		}
+
 		return nil, SessionGetResult{Output: formatSession(session)}, nil
 	}
 }

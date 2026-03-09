@@ -88,6 +88,10 @@ func validateTorrentLimits(params *TorrentSetParams) error {
 		return validationErr(ErrNegativeLimit)
 	}
 
+	if params.QueuePosition != nil && *params.QueuePosition < 0 {
+		return validationErr(ErrNegativeLimit)
+	}
+
 	return nil
 }
 

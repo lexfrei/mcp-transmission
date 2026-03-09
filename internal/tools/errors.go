@@ -9,6 +9,9 @@ var ErrValidation = errors.New("validation error")
 // ErrNegativeLimit is returned when a numeric limit parameter is negative.
 var ErrNegativeLimit = errors.New("numeric limits must not be negative")
 
+// ErrAbsolutePathRequired is returned when a path parameter is not absolute.
+var ErrAbsolutePathRequired = errors.New("path must be absolute (start with /)")
+
 // ErrTransmission indicates a failure communicating with the Transmission RPC API.
 var ErrTransmission = errors.New("transmission request error")
 

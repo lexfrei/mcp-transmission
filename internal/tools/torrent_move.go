@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 
 	"github.com/cockroachdb/errors"
 
@@ -40,6 +41,11 @@ func NewTorrentMoveHandler(client transmission.Client) mcp.ToolHandlerFor[Torren
 		if params.Location == "" {
 			return &mcp.CallToolResult{IsError: true}, TorrentMoveResult{},
 				validationErr(ErrLocationRequired)
+		}
+
+		if !filepath.IsAbs(params.Location) {
+			return &mcp.CallToolResult{IsError: true}, TorrentMoveResult{},
+				validationErr(ErrAbsolutePathRequired)
 		}
 
 		err := client.TorrentSetLocation(ctx, params.IDs, params.Location, params.Move)
