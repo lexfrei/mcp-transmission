@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/cockroachdb/errors"
 	"github.com/lexfrei/mcp-transmission/internal/tools"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -61,5 +62,31 @@ func TestTorrentStartHandler_All(t *testing.T) {
 
 	if output.Message != "Started all torrents" {
 		t.Errorf("expected 'Started all torrents', got %s", output.Message)
+	}
+}
+
+func TestTorrentStartHandler_Error(t *testing.T) {
+	client := newMockClient()
+	client.err = errMock
+	handler := tools.NewTorrentStartHandler(client)
+
+	params := tools.TorrentStartParams{IDs: []int64{1}}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrTransmission) {
+		t.Errorf("expected ErrTransmission, got: %v", err)
+	}
+}
+
+func TestTorrentStartHandler_NowError(t *testing.T) {
+	client := newMockClient()
+	client.err = errMock
+	handler := tools.NewTorrentStartHandler(client)
+
+	params := tools.TorrentStartParams{IDs: []int64{1}, Now: true}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrTransmission) {
+		t.Errorf("expected ErrTransmission, got: %v", err)
 	}
 }
