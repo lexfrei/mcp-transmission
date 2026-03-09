@@ -66,14 +66,14 @@ Add to your `.mcp.json`:
         "ghcr.io/lexfrei/mcp-transmission:latest"
       ],
       "env": {
-        "TRANSMISSION_URL": "http://your-transmission-host:9091/transmission/rpc",
-        "TRANSMISSION_USERNAME": "",
-        "TRANSMISSION_PASSWORD": ""
+        "TRANSMISSION_URL": "http://host.docker.internal:9091/transmission/rpc"
       }
     }
   }
 }
 ```
+
+Set `TRANSMISSION_USERNAME` and `TRANSMISSION_PASSWORD` as environment variables on your host if your Transmission instance requires authentication. They are passed through to the container via `-e` flags.
 
 ### Direct binary
 
@@ -92,6 +92,10 @@ docker run --rm -i \
   -e TRANSMISSION_URL=http://host.docker.internal:9091/transmission/rpc \
   mcp-transmission
 ```
+
+## Requirements
+
+- Go 1.26.1 or later
 
 ## Building
 

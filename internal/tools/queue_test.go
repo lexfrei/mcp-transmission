@@ -33,6 +33,32 @@ func TestQueueMoveHandler_Top(t *testing.T) {
 	}
 }
 
+func TestQueueMoveHandler_AllActions(t *testing.T) {
+	actions := []string{"top", "up", "down", "bottom"}
+
+	for _, action := range actions {
+		t.Run(action, func(t *testing.T) {
+			client := newMockClient()
+			handler := tools.NewQueueMoveHandler(client)
+
+			params := tools.QueueMoveParams{IDs: []int64{1, 2}, Action: action}
+
+			result, output, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+			if err != nil {
+				t.Fatalf("handler failed for action %s: %v", action, err)
+			}
+
+			if result != nil && result.IsError {
+				t.Errorf("expected success for action %s", action)
+			}
+
+			if output.Message == "" {
+				t.Errorf("expected non-empty message for action %s", action)
+			}
+		})
+	}
+}
+
 func TestQueueMoveHandler_TransmissionError(t *testing.T) {
 	client := newMockClient()
 	client.err = errMock

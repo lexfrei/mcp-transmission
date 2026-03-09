@@ -4,12 +4,11 @@ ARG VERSION=development
 
 # hadolint ignore=DL3018
 RUN echo 'nobody:x:65534:65534:Nobody:/:' > /tmp/passwd && \
-    apk add --no-cache upx ca-certificates
+    apk add --no-cache ca-certificates
 
 WORKDIR /build
 COPY . .
-RUN CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=${VERSION}" -trimpath ./cmd/mcp-transmission && \
-    upx --best --lzma mcp-transmission
+RUN CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=${VERSION}" -trimpath ./cmd/mcp-transmission
 
 FROM scratch
 
