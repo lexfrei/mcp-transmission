@@ -1,7 +1,19 @@
 // Package config provides configuration loading from environment variables.
 package config
 
-import "os"
+import (
+	"os"
+	"strconv"
+
+	"github.com/cockroachdb/errors"
+)
+
+const (
+	maxPort = 65535
+)
+
+// ErrInvalidHTTPPort is returned when MCP_HTTP_PORT is not a valid port number.
+var ErrInvalidHTTPPort = errors.New("MCP_HTTP_PORT must be a valid port number (1-65535)")
 
 // Config holds the application configuration loaded from environment variables.
 type Config struct {
@@ -12,18 +24,27 @@ type Config struct {
 }
 
 // Load reads configuration from environment variables and returns a Config.
-func Load() *Config {
+// Returns an error if MCP_HTTP_PORT is set but not a valid port number.
+func Load() (*Config, error) {
 	transmissionURL := os.Getenv("TRANSMISSION_URL")
 	if transmissionURL == "" {
 		transmissionURL = "http://localhost:9091/transmission/rpc"
+	}
+
+	httpPort := os.Getenv("MCP_HTTP_PORT")
+	if httpPort != "" {
+		port, err := strconv.Atoi(httpPort)
+		if err != nil || port < 1 || port > maxPort {
+			return nil, ErrInvalidHTTPPort
+		}
 	}
 
 	return &Config{
 		TransmissionURL: transmissionURL,
 		Username:        os.Getenv("TRANSMISSION_USERNAME"),
 		Password:        os.Getenv("TRANSMISSION_PASSWORD"),
-		HTTPPort:        os.Getenv("MCP_HTTP_PORT"),
-	}
+		HTTPPort:        httpPort,
+	}, nil
 }
 
 // HasAuth returns true if both username and password are set.

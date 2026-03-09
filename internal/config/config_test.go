@@ -3,6 +3,7 @@ package config_test
 import (
 	"testing"
 
+	"github.com/cockroachdb/errors"
 	"github.com/lexfrei/mcp-transmission/internal/config"
 )
 
@@ -12,7 +13,10 @@ func TestLoad_Defaults(t *testing.T) {
 	t.Setenv("TRANSMISSION_PASSWORD", "")
 	t.Setenv("MCP_HTTP_PORT", "")
 
-	cfg := config.Load()
+	cfg, err := config.Load()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	if cfg.TransmissionURL != "http://localhost:9091/transmission/rpc" {
 		t.Errorf("expected default TransmissionURL, got %s", cfg.TransmissionURL)
@@ -37,7 +41,10 @@ func TestLoad_CustomValues(t *testing.T) {
 	t.Setenv("TRANSMISSION_PASSWORD", "secret")
 	t.Setenv("MCP_HTTP_PORT", "8080")
 
-	cfg := config.Load()
+	cfg, err := config.Load()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	if cfg.TransmissionURL != "http://nas:9091/transmission/rpc" {
 		t.Errorf("expected custom TransmissionURL, got %s", cfg.TransmissionURL)
@@ -53,6 +60,42 @@ func TestLoad_CustomValues(t *testing.T) {
 
 	if cfg.HTTPPort != "8080" {
 		t.Errorf("expected HTTPPort 8080, got %s", cfg.HTTPPort)
+	}
+}
+
+func TestLoad_InvalidHTTPPort_NonNumeric(t *testing.T) {
+	t.Setenv("TRANSMISSION_URL", "")
+	t.Setenv("TRANSMISSION_USERNAME", "")
+	t.Setenv("TRANSMISSION_PASSWORD", "")
+	t.Setenv("MCP_HTTP_PORT", "not-a-number")
+
+	_, err := config.Load()
+	if !errors.Is(err, config.ErrInvalidHTTPPort) {
+		t.Errorf("expected ErrInvalidHTTPPort, got: %v", err)
+	}
+}
+
+func TestLoad_InvalidHTTPPort_TooHigh(t *testing.T) {
+	t.Setenv("TRANSMISSION_URL", "")
+	t.Setenv("TRANSMISSION_USERNAME", "")
+	t.Setenv("TRANSMISSION_PASSWORD", "")
+	t.Setenv("MCP_HTTP_PORT", "99999")
+
+	_, err := config.Load()
+	if !errors.Is(err, config.ErrInvalidHTTPPort) {
+		t.Errorf("expected ErrInvalidHTTPPort, got: %v", err)
+	}
+}
+
+func TestLoad_InvalidHTTPPort_Zero(t *testing.T) {
+	t.Setenv("TRANSMISSION_URL", "")
+	t.Setenv("TRANSMISSION_USERNAME", "")
+	t.Setenv("TRANSMISSION_PASSWORD", "")
+	t.Setenv("MCP_HTTP_PORT", "0")
+
+	_, err := config.Load()
+	if !errors.Is(err, config.ErrInvalidHTTPPort) {
+		t.Errorf("expected ErrInvalidHTTPPort, got: %v", err)
 	}
 }
 
