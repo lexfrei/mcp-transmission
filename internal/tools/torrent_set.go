@@ -21,6 +21,7 @@ type TorrentSetParams struct {
 	UploadLimit     *int64   `json:"uploadLimit,omitempty"     jsonschema:"Upload speed limit in KB/s"`
 	UploadLimited   *bool    `json:"uploadLimited,omitempty"   jsonschema:"Enable upload speed limit"`
 	Labels          []string `json:"labels,omitempty"          jsonschema:"Labels/tags for the torrents"`
+	ClearLabels     bool     `json:"clearLabels,omitempty"     jsonschema:"Remove all labels from torrents"`
 	SeedRatioLimit  *float64 `json:"seedRatioLimit,omitempty"  jsonschema:"Seed ratio limit"`
 	QueuePosition   *int     `json:"queuePosition,omitempty"   jsonschema:"Queue position"`
 }
@@ -75,6 +76,7 @@ func hasTorrentChanges(params *TorrentSetParams) bool {
 		params.UploadLimit != nil ||
 		params.UploadLimited != nil ||
 		len(params.Labels) > 0 ||
+		params.ClearLabels ||
 		params.SeedRatioLimit != nil ||
 		params.QueuePosition != nil
 }
@@ -89,7 +91,9 @@ func buildTorrentSetArgs(params *TorrentSetParams) *transmission.TorrentSetArgs 
 		QueuePosition:   params.QueuePosition,
 	}
 
-	if len(params.Labels) > 0 {
+	if params.ClearLabels {
+		args.Labels = []string{}
+	} else if len(params.Labels) > 0 {
 		args.Labels = params.Labels
 	}
 

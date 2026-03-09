@@ -56,6 +56,25 @@ func TestTorrentSetHandler_TransmissionError(t *testing.T) {
 	}
 }
 
+func TestTorrentSetHandler_ClearLabels(t *testing.T) {
+	client := newMockClient()
+	handler := tools.NewTorrentSetHandler(client)
+
+	params := tools.TorrentSetParams{
+		IDs:         []int64{1},
+		ClearLabels: true,
+	}
+
+	result, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if err != nil {
+		t.Fatalf("handler failed: %v", err)
+	}
+
+	if result != nil && result.IsError {
+		t.Error("expected success")
+	}
+}
+
 func TestTorrentSetHandler_EmptyChanges(t *testing.T) {
 	client := newMockClient()
 	handler := tools.NewTorrentSetHandler(client)
