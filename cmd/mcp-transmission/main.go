@@ -1,0 +1,151 @@
+package main
+
+import (
+	"context"
+	"log"
+	"log/slog"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/cockroachdb/errors"
+	"github.com/lexfrei/go-transmission/api/transmission"
+
+	"github.com/lexfrei/mcp-transmission/internal/config"
+	"github.com/lexfrei/mcp-transmission/internal/tools"
+	"github.com/modelcontextprotocol/go-sdk/mcp"
+)
+
+const (
+	serverName        = "mcp-transmission"
+	readHeaderTimeout = 10 * time.Second
+	shutdownTimeout   = 5 * time.Second
+)
+
+// version is set via ldflags at build time.
+var version = "dev"
+
+func main() {
+	err := run()
+	if err != nil {
+		log.Printf("server error: %v", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
+	cfg := config.Load()
+
+	opts := []transmission.Option{}
+	if cfg.HasAuth() {
+		opts = append(opts, transmission.WithAuth(cfg.Username, cfg.Password))
+	}
+
+	client, err := transmission.New(cfg.TransmissionURL, opts...)
+	if err != nil {
+		return errors.Wrap(err, "failed to create transmission client")
+	}
+
+	defer client.Close()
+
+	server := mcp.NewServer(
+		&mcp.Implementation{
+			Name:    serverName,
+			Version: version,
+		},
+		&mcp.ServerOptions{
+			Instructions: "MCP server for managing Transmission BitTorrent client. " +
+				"Provides tools to list, add, remove, start, stop torrents, " +
+				"view detailed torrent info, manage queue and bandwidth groups, " +
+				"check session stats and configuration, test port accessibility, " +
+				"and check free disk space. " +
+				"Requires TRANSMISSION_URL environment variable " +
+				"(defaults to http://localhost:9091/transmission/rpc). " +
+				"Supports basic auth via TRANSMISSION_USERNAME/TRANSMISSION_PASSWORD.",
+			Logger: slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+				Level: slog.LevelInfo,
+			})),
+		},
+	)
+
+	registerTools(server, client)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-sigChan
+		cancel()
+	}()
+
+	if cfg.HTTPEnabled() {
+		go runHTTPServer(ctx, server, cfg.HTTPPort)
+	}
+
+	runErr := server.Run(ctx, &mcp.StdioTransport{})
+	if runErr != nil && ctx.Err() == nil {
+		return errors.Wrap(runErr, "server run failed")
+	}
+
+	return nil
+}
+
+func registerTools(server *mcp.Server, client transmission.Client) {
+	mcp.AddTool(server, tools.TorrentListTool(), tools.NewTorrentListHandler(client))
+	mcp.AddTool(server, tools.TorrentAddTool(), tools.NewTorrentAddHandler(client))
+	mcp.AddTool(server, tools.TorrentRemoveTool(), tools.NewTorrentRemoveHandler(client))
+	mcp.AddTool(server, tools.TorrentStartTool(), tools.NewTorrentStartHandler(client))
+	mcp.AddTool(server, tools.TorrentStopTool(), tools.NewTorrentStopHandler(client))
+	mcp.AddTool(server, tools.TorrentVerifyTool(), tools.NewTorrentVerifyHandler(client))
+	mcp.AddTool(server, tools.TorrentReannounceTool(), tools.NewTorrentReannounceHandler(client))
+	mcp.AddTool(server, tools.TorrentDetailsTool(), tools.NewTorrentDetailsHandler(client))
+	mcp.AddTool(server, tools.TorrentSetTool(), tools.NewTorrentSetHandler(client))
+	mcp.AddTool(server, tools.TorrentMoveTool(), tools.NewTorrentMoveHandler(client))
+	mcp.AddTool(server, tools.SessionStatsTool(), tools.NewSessionStatsHandler(client))
+	mcp.AddTool(server, tools.SessionGetTool(), tools.NewSessionGetHandler(client))
+	mcp.AddTool(server, tools.SessionSetTool(), tools.NewSessionSetHandler(client))
+	mcp.AddTool(server, tools.FreeSpaceTool(), tools.NewFreeSpaceHandler(client))
+	mcp.AddTool(server, tools.PortTestTool(), tools.NewPortTestHandler(client))
+	mcp.AddTool(server, tools.BlocklistUpdateTool(), tools.NewBlocklistUpdateHandler(client))
+	mcp.AddTool(server, tools.QueueMoveTool(), tools.NewQueueMoveHandler(client))
+	mcp.AddTool(server, tools.BandwidthGroupGetTool(), tools.NewBandwidthGroupGetHandler(client))
+}
+
+func runHTTPServer(ctx context.Context, server *mcp.Server, port string) {
+	handler := mcp.NewStreamableHTTPHandler(
+		func(_ *http.Request) *mcp.Server {
+			return server
+		},
+		nil,
+	)
+
+	httpServer := &http.Server{
+		Addr:              ":" + port,
+		Handler:           handler,
+		ReadHeaderTimeout: readHeaderTimeout,
+	}
+
+	go func() {
+		<-ctx.Done()
+
+		shutdownCtx, shutdownCancel := context.WithTimeout(ctx, shutdownTimeout)
+		defer shutdownCancel()
+
+		err := httpServer.Shutdown(shutdownCtx)
+		if err != nil {
+			log.Printf("HTTP server shutdown error: %v", err)
+		}
+	}()
+
+	log.Printf("HTTP server listening on :%s", port)
+
+	err := httpServer.ListenAndServe()
+	if !errors.Is(err, http.ErrServerClosed) {
+		log.Printf("HTTP server error: %v", err)
+	}
+}
