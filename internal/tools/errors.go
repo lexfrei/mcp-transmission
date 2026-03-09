@@ -6,6 +6,9 @@ import "github.com/cockroachdb/errors"
 // ErrValidation indicates invalid parameters provided by the caller.
 var ErrValidation = errors.New("validation error")
 
+// ErrNegativeLimit is returned when a numeric limit parameter is negative.
+var ErrNegativeLimit = errors.New("numeric limits must not be negative")
+
 // ErrTransmission indicates a failure communicating with the Transmission RPC API.
 var ErrTransmission = errors.New("transmission request error")
 

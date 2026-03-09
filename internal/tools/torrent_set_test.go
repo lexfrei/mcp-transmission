@@ -56,6 +56,22 @@ func TestTorrentSetHandler_TransmissionError(t *testing.T) {
 	}
 }
 
+func TestTorrentSetHandler_NegativeDownloadLimit(t *testing.T) {
+	client := newMockClient()
+	handler := tools.NewTorrentSetHandler(client)
+
+	neg := int64(-100)
+	params := tools.TorrentSetParams{
+		IDs:           []int64{1},
+		DownloadLimit: &neg,
+	}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrValidation) {
+		t.Errorf("expected ErrValidation for negative limit, got: %v", err)
+	}
+}
+
 func TestTorrentSetHandler_ClearLabels(t *testing.T) {
 	client := newMockClient()
 	handler := tools.NewTorrentSetHandler(client)

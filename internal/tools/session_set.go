@@ -46,6 +46,11 @@ func NewSessionSetHandler(
 				validationErr(ErrNoSessionChanges)
 		}
 
+		limErr := validateSessionLimits(&params)
+		if limErr != nil {
+			return &mcp.CallToolResult{IsError: true}, SessionSetResult{}, limErr
+		}
+
 		args := buildSessionSetArgs(&params)
 
 		err := client.SessionSet(ctx, args)
@@ -79,6 +84,34 @@ func hasSessionChanges(params *SessionSetParams) bool {
 		params.DownloadDir != nil ||
 		params.PeerLimitGlobal != nil ||
 		params.PeerLimitPerTorrent != nil
+}
+
+func validateSessionLimits(params *SessionSetParams) error {
+	if params.SpeedLimitDown != nil && *params.SpeedLimitDown < 0 {
+		return validationErr(ErrNegativeLimit)
+	}
+
+	if params.SpeedLimitUp != nil && *params.SpeedLimitUp < 0 {
+		return validationErr(ErrNegativeLimit)
+	}
+
+	if params.AltSpeedDown != nil && *params.AltSpeedDown < 0 {
+		return validationErr(ErrNegativeLimit)
+	}
+
+	if params.AltSpeedUp != nil && *params.AltSpeedUp < 0 {
+		return validationErr(ErrNegativeLimit)
+	}
+
+	if params.PeerLimitGlobal != nil && *params.PeerLimitGlobal < 0 {
+		return validationErr(ErrNegativeLimit)
+	}
+
+	if params.PeerLimitPerTorrent != nil && *params.PeerLimitPerTorrent < 0 {
+		return validationErr(ErrNegativeLimit)
+	}
+
+	return nil
 }
 
 func buildSessionSetArgs(params *SessionSetParams) *transmission.SessionSetArgs {

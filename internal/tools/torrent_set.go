@@ -48,6 +48,11 @@ func NewTorrentSetHandler(client transmission.Client) mcp.ToolHandlerFor[Torrent
 				validationErr(ErrNoTorrentChanges)
 		}
 
+		limErr := validateTorrentLimits(&params)
+		if limErr != nil {
+			return &mcp.CallToolResult{IsError: true}, TorrentSetResult{}, limErr
+		}
+
 		args := buildTorrentSetArgs(&params)
 
 		err := client.TorrentSet(ctx, params.IDs, args)
@@ -68,6 +73,18 @@ func TorrentSetTool() *mcp.Tool {
 		Name:        "transmission_torrent_set",
 		Description: "Modify properties of one or more torrents (speed limits, labels, seed ratio, etc.)",
 	}
+}
+
+func validateTorrentLimits(params *TorrentSetParams) error {
+	if params.DownloadLimit != nil && *params.DownloadLimit < 0 {
+		return validationErr(ErrNegativeLimit)
+	}
+
+	if params.UploadLimit != nil && *params.UploadLimit < 0 {
+		return validationErr(ErrNegativeLimit)
+	}
+
+	return nil
 }
 
 func hasTorrentChanges(params *TorrentSetParams) bool {

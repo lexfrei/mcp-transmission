@@ -52,6 +52,21 @@ func TestSessionSetHandler_EmptyParams(t *testing.T) {
 	}
 }
 
+func TestSessionSetHandler_NegativeSpeedLimit(t *testing.T) {
+	client := newMockClient()
+	handler := tools.NewSessionSetHandler(client)
+
+	neg := int64(-100)
+	params := tools.SessionSetParams{
+		SpeedLimitDown: &neg,
+	}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrValidation) {
+		t.Errorf("expected ErrValidation for negative limit, got: %v", err)
+	}
+}
+
 func TestSessionSetHandler_TransmissionError(t *testing.T) {
 	client := newMockClient()
 	client.err = errMock
