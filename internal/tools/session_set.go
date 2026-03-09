@@ -119,9 +119,5 @@ func describeSessionChanges(params *SessionSetParams) string {
 		changes = append(changes, "peer limits")
 	}
 
-	if len(changes) == 0 {
-		return "Session updated (no specific changes described)"
-	}
-
 	return "Updated session: " + strings.Join(changes, ", ")
 }
