@@ -60,6 +60,18 @@ func TestTorrentDetailsHandler_ZeroID(t *testing.T) {
 	}
 }
 
+func TestTorrentDetailsHandler_NegativeID(t *testing.T) {
+	client := newMockClient()
+	handler := tools.NewTorrentDetailsHandler(client)
+
+	params := tools.TorrentDetailsParams{ID: -1}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrValidation) {
+		t.Errorf("expected ErrValidation, got: %v", err)
+	}
+}
+
 func TestTorrentDetailsHandler_NotFound(t *testing.T) {
 	client := newMockClient()
 	client.torrentGetResult = &transmission.TorrentGetResult{

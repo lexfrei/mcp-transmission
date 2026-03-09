@@ -12,8 +12,8 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// ErrSingleIDRequired is returned when exactly one torrent ID is needed.
-var ErrSingleIDRequired = errors.New("exactly one torrent ID is required")
+// ErrPositiveIDRequired is returned when a positive torrent ID is needed.
+var ErrPositiveIDRequired = errors.New("torrent ID must be positive")
 
 // torrentDetailFields returns all fields requested for detailed torrent info.
 func torrentDetailFields() []string {
@@ -51,9 +51,9 @@ func NewTorrentDetailsHandler(
 		_ *mcp.CallToolRequest,
 		params TorrentDetailsParams,
 	) (*mcp.CallToolResult, TorrentDetailsResult, error) {
-		if params.ID == 0 {
+		if params.ID <= 0 {
 			return &mcp.CallToolResult{IsError: true}, TorrentDetailsResult{},
-				validationErr(ErrSingleIDRequired)
+				validationErr(ErrPositiveIDRequired)
 		}
 
 		result, err := client.TorrentGet(ctx, torrentDetailFields(), []int64{params.ID})
