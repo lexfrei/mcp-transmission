@@ -13,10 +13,14 @@ import (
 // ErrIDsRequired is returned when the ids parameter is missing.
 var ErrIDsRequired = errors.New("at least one torrent ID is required")
 
+// ErrDeleteConfirmRequired is returned when deleteLocalData is true but confirmDelete is not.
+var ErrDeleteConfirmRequired = errors.New("confirmDelete must be true when deleteLocalData is true")
+
 // TorrentRemoveParams defines the parameters for the transmission_torrent_remove tool.
 type TorrentRemoveParams struct {
 	IDs             []int64 `json:"ids"                       jsonschema:"Torrent IDs to remove"`
-	DeleteLocalData bool    `json:"deleteLocalData,omitempty" jsonschema:"Also delete downloaded files"`
+	DeleteLocalData bool    `json:"deleteLocalData,omitempty" jsonschema:"Also delete downloaded files (DESTRUCTIVE)"`
+	ConfirmDelete   bool    `json:"confirmDelete,omitempty"   jsonschema:"Must be true when deleteLocalData is true"`
 }
 
 // TorrentRemoveResult is the output of the transmission_torrent_remove tool.
@@ -34,6 +38,11 @@ func NewTorrentRemoveHandler(client transmission.Client) mcp.ToolHandlerFor[Torr
 		if len(params.IDs) == 0 {
 			return &mcp.CallToolResult{IsError: true}, TorrentRemoveResult{},
 				validationErr(ErrIDsRequired)
+		}
+
+		if params.DeleteLocalData && !params.ConfirmDelete {
+			return &mcp.CallToolResult{IsError: true}, TorrentRemoveResult{},
+				validationErr(ErrDeleteConfirmRequired)
 		}
 
 		err := client.TorrentRemove(ctx, params.IDs, params.DeleteLocalData)
@@ -55,6 +64,6 @@ func NewTorrentRemoveHandler(client transmission.Client) mcp.ToolHandlerFor[Torr
 func TorrentRemoveTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "transmission_torrent_remove",
-		Description: "Remove one or more torrents. Optionally delete downloaded files",
+		Description: "Remove one or more torrents. Set deleteLocalData=true AND confirmDelete=true to also delete files from disk (DESTRUCTIVE)",
 	}
 }
