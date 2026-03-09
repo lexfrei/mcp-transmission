@@ -62,7 +62,7 @@ func NewTorrentDetailsHandler(
 				transmissionErr("failed to get torrent details", err)
 		}
 
-		if len(result.Torrents) == 0 {
+		if result == nil || len(result.Torrents) == 0 {
 			return &mcp.CallToolResult{IsError: true}, TorrentDetailsResult{},
 				validationErr(fmt.Errorf("torrent %d not found", params.ID)) //nolint:err113 // dynamic ID in message.
 		}

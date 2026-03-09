@@ -42,6 +42,10 @@ func NewTorrentListHandler(client transmission.Client) mcp.ToolHandlerFor[Torren
 				transmissionErr("failed to list torrents", err)
 		}
 
+		if result == nil {
+			return nil, TorrentListResult{Output: "No torrents found.", Summary: "Total: 0"}, nil
+		}
+
 		output := formatTorrentList(result.Torrents)
 
 		return nil, TorrentListResult{

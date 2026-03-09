@@ -55,6 +55,26 @@ func TestTorrentListHandler_Success(t *testing.T) {
 	}
 }
 
+func TestTorrentListHandler_NilResult(t *testing.T) {
+	client := newMockClient()
+	client.torrentGetResult = nil
+
+	handler := tools.NewTorrentListHandler(client)
+
+	result, output, err := handler(context.Background(), &mcp.CallToolRequest{}, tools.TorrentListParams{})
+	if err != nil {
+		t.Fatalf("handler failed: %v", err)
+	}
+
+	if result != nil && result.IsError {
+		t.Error("expected success")
+	}
+
+	if output.Count != 0 {
+		t.Errorf("expected count 0, got %d", output.Count)
+	}
+}
+
 func TestTorrentListHandler_Empty(t *testing.T) {
 	client := newMockClient()
 	client.torrentGetResult = &transmission.TorrentGetResult{
