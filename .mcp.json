@@ -9,7 +9,7 @@
       "ghcr.io/lexfrei/mcp-transmission:latest"
     ],
     "env": {
-      "TRANSMISSION_URL": ""
+      "TRANSMISSION_URL": "http://host.docker.internal:9091/transmission/rpc"
     }
   }
 }

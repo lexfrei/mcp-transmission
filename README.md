@@ -79,10 +79,14 @@ TRANSMISSION_URL=http://localhost:9091/transmission/rpc ./mcp-transmission
 
 ### Container
 
+> **Note:** CI/CD for publishing container images is not yet configured.
+> Build the image locally using the instructions below.
+
 ```bash
+docker build --file Containerfile --tag mcp-transmission .
 docker run --rm -i \
   -e TRANSMISSION_URL=http://host.docker.internal:9091/transmission/rpc \
-  ghcr.io/lexfrei/mcp-transmission:latest
+  mcp-transmission
 ```
 
 ## Building
