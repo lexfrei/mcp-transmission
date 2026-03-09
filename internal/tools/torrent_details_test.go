@@ -72,6 +72,20 @@ func TestTorrentDetailsHandler_NegativeID(t *testing.T) {
 	}
 }
 
+func TestTorrentDetailsHandler_TransmissionError(t *testing.T) {
+	client := newMockClient()
+	client.err = errMock
+
+	handler := tools.NewTorrentDetailsHandler(client)
+
+	params := tools.TorrentDetailsParams{ID: 1}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrTransmission) {
+		t.Errorf("expected ErrTransmission, got: %v", err)
+	}
+}
+
 func TestTorrentDetailsHandler_NotFound(t *testing.T) {
 	client := newMockClient()
 	client.torrentGetResult = &transmission.TorrentGetResult{

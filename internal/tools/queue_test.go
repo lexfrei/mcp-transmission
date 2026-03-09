@@ -33,6 +33,20 @@ func TestQueueMoveHandler_Top(t *testing.T) {
 	}
 }
 
+func TestQueueMoveHandler_TransmissionError(t *testing.T) {
+	client := newMockClient()
+	client.err = errMock
+
+	handler := tools.NewQueueMoveHandler(client)
+
+	params := tools.QueueMoveParams{IDs: []int64{1}, Action: "top"}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrTransmission) {
+		t.Errorf("expected ErrTransmission, got: %v", err)
+	}
+}
+
 func TestQueueMoveHandler_InvalidAction(t *testing.T) {
 	client := newMockClient()
 	handler := tools.NewQueueMoveHandler(client)

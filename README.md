@@ -55,17 +55,21 @@ Add to your `.mcp.json`:
 
 ```json
 {
-  "mcp-transmission": {
-    "command": "docker",
-    "args": [
-      "run", "--rm", "-i",
-      "-e", "TRANSMISSION_URL",
-      "-e", "TRANSMISSION_USERNAME",
-      "-e", "TRANSMISSION_PASSWORD",
-      "ghcr.io/lexfrei/mcp-transmission:latest"
-    ],
-    "env": {
-      "TRANSMISSION_URL": "http://your-transmission-host:9091/transmission/rpc"
+  "mcpServers": {
+    "mcp-transmission": {
+      "command": "docker",
+      "args": [
+        "run", "--rm", "-i",
+        "-e", "TRANSMISSION_URL",
+        "-e", "TRANSMISSION_USERNAME",
+        "-e", "TRANSMISSION_PASSWORD",
+        "ghcr.io/lexfrei/mcp-transmission:latest"
+      ],
+      "env": {
+        "TRANSMISSION_URL": "http://your-transmission-host:9091/transmission/rpc",
+        "TRANSMISSION_USERNAME": "",
+        "TRANSMISSION_PASSWORD": ""
+      }
     }
   }
 }

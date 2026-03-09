@@ -18,7 +18,7 @@ type TorrentAddParams struct {
 	Filename    string   `json:"filename,omitempty"    jsonschema:"Magnet link, URL, or torrent file path"`
 	Metainfo    string   `json:"metainfo,omitempty"    jsonschema:"Base64-encoded .torrent file content"`
 	DownloadDir string   `json:"downloadDir,omitempty" jsonschema:"Download directory path"`
-	Paused      bool     `json:"paused,omitempty"      jsonschema:"Start torrent paused"`
+	Paused      *bool    `json:"paused,omitempty"      jsonschema:"Start torrent paused"`
 	Labels      []string `json:"labels,omitempty"      jsonschema:"Labels/tags for the torrent"`
 }
 
@@ -78,8 +78,8 @@ func buildTorrentAddArgs(params *TorrentAddParams) *transmission.TorrentAddArgs 
 		args.DownloadDir = &params.DownloadDir
 	}
 
-	if params.Paused {
-		args.Paused = &params.Paused
+	if params.Paused != nil {
+		args.Paused = params.Paused
 	}
 
 	if len(params.Labels) > 0 {
@@ -90,6 +90,10 @@ func buildTorrentAddArgs(params *TorrentAddParams) *transmission.TorrentAddArgs 
 }
 
 func buildTorrentAddResult(resp *transmission.TorrentAddResult) TorrentAddResult {
+	if resp == nil {
+		return TorrentAddResult{Message: "Torrent added (no details returned)"}
+	}
+
 	if resp.TorrentAdded != nil {
 		return TorrentAddResult{
 			ID:      resp.TorrentAdded.ID,

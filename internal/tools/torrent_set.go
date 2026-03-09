@@ -18,7 +18,6 @@ type TorrentSetParams struct {
 	Labels          []string `json:"labels,omitempty"          jsonschema:"Labels/tags for the torrents"`
 	SeedRatioLimit  *float64 `json:"seedRatioLimit,omitempty"  jsonschema:"Seed ratio limit"`
 	QueuePosition   *int     `json:"queuePosition,omitempty"   jsonschema:"Queue position"`
-	Location        *string  `json:"location,omitempty"        jsonschema:"Download directory path"`
 }
 
 // TorrentSetResult is the output of the transmission_torrent_set tool.
@@ -68,7 +67,6 @@ func buildTorrentSetArgs(params *TorrentSetParams) *transmission.TorrentSetArgs 
 		UploadLimited:   params.UploadLimited,
 		SeedRatioLimit:  params.SeedRatioLimit,
 		QueuePosition:   params.QueuePosition,
-		Location:        params.Location,
 	}
 
 	if len(params.Labels) > 0 {
