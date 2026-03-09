@@ -49,19 +49,15 @@ func TestTorrentStartHandler_Now(t *testing.T) {
 	}
 }
 
-func TestTorrentStartHandler_All(t *testing.T) {
+func TestTorrentStartHandler_EmptyIDs(t *testing.T) {
 	client := newMockClient()
 	handler := tools.NewTorrentStartHandler(client)
 
 	params := tools.TorrentStartParams{}
 
-	_, output, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
-	if err != nil {
-		t.Fatalf("handler failed: %v", err)
-	}
-
-	if output.Message != "Started all torrents" {
-		t.Errorf("expected 'Started all torrents', got %s", output.Message)
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrValidation) {
+		t.Errorf("expected ErrValidation for empty IDs, got: %v", err)
 	}
 }
 

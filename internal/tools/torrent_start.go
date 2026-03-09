@@ -10,7 +10,7 @@ import (
 
 // TorrentStartParams defines the parameters for the transmission_torrent_start tool.
 type TorrentStartParams struct {
-	IDs []int64 `json:"ids,omitempty" jsonschema:"Torrent IDs to start (empty = all)"`
+	IDs []int64 `json:"ids"           jsonschema:"Torrent IDs to start"`
 	Now bool    `json:"now,omitempty" jsonschema:"Start immediately, bypassing the queue"`
 }
 
@@ -26,6 +26,11 @@ func NewTorrentStartHandler(client transmission.Client) mcp.ToolHandlerFor[Torre
 		_ *mcp.CallToolRequest,
 		params TorrentStartParams,
 	) (*mcp.CallToolResult, TorrentStartResult, error) {
+		if len(params.IDs) == 0 {
+			return &mcp.CallToolResult{IsError: true}, TorrentStartResult{},
+				validationErr(ErrIDsRequired)
+		}
+
 		var err error
 
 		if params.Now {
@@ -49,14 +54,10 @@ func NewTorrentStartHandler(client transmission.Client) mcp.ToolHandlerFor[Torre
 func TorrentStartTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "transmission_torrent_start",
-		Description: "Start one or more torrents. If no IDs given, starts all. Use 'now' to bypass queue",
+		Description: "Start one or more torrents. Use 'now' to bypass queue",
 	}
 }
 
 func formatActionMessage(action string, ids []int64) string {
-	if len(ids) == 0 {
-		return action + " all torrents"
-	}
-
 	return fmt.Sprintf("%s %d torrent(s)", action, len(ids))
 }

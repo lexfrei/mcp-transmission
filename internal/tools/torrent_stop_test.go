@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/cockroachdb/errors"
+
 	"github.com/lexfrei/mcp-transmission/internal/tools"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -29,5 +31,17 @@ func TestTorrentStopHandler_Success(t *testing.T) {
 
 	if result != nil && result.IsError {
 		t.Error("expected success")
+	}
+}
+
+func TestTorrentStopHandler_EmptyIDs(t *testing.T) {
+	client := newMockClient()
+	handler := tools.NewTorrentStopHandler(client)
+
+	params := tools.TorrentStopParams{}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrValidation) {
+		t.Errorf("expected ErrValidation for empty IDs, got: %v", err)
 	}
 }

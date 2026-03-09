@@ -9,7 +9,7 @@ import (
 
 // TorrentStopParams defines the parameters for the transmission_torrent_stop tool.
 type TorrentStopParams struct {
-	IDs []int64 `json:"ids,omitempty" jsonschema:"Torrent IDs to stop (empty = all)"`
+	IDs []int64 `json:"ids" jsonschema:"Torrent IDs to stop"`
 }
 
 // TorrentStopResult is the output of the transmission_torrent_stop tool.
@@ -24,6 +24,11 @@ func NewTorrentStopHandler(client transmission.Client) mcp.ToolHandlerFor[Torren
 		_ *mcp.CallToolRequest,
 		params TorrentStopParams,
 	) (*mcp.CallToolResult, TorrentStopResult, error) {
+		if len(params.IDs) == 0 {
+			return &mcp.CallToolResult{IsError: true}, TorrentStopResult{},
+				validationErr(ErrIDsRequired)
+		}
+
 		err := client.TorrentStop(ctx, params.IDs)
 		if err != nil {
 			return &mcp.CallToolResult{IsError: true}, TorrentStopResult{},
@@ -40,6 +45,6 @@ func NewTorrentStopHandler(client transmission.Client) mcp.ToolHandlerFor[Torren
 func TorrentStopTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "transmission_torrent_stop",
-		Description: "Stop (pause) one or more torrents. If no IDs given, stops all",
+		Description: "Stop (pause) one or more torrents",
 	}
 }

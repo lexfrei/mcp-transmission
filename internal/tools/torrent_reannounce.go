@@ -9,7 +9,7 @@ import (
 
 // TorrentReannounceParams defines the parameters for the transmission_torrent_reannounce tool.
 type TorrentReannounceParams struct {
-	IDs []int64 `json:"ids,omitempty" jsonschema:"Torrent IDs to reannounce (empty = all)"`
+	IDs []int64 `json:"ids" jsonschema:"Torrent IDs to reannounce"`
 }
 
 // TorrentReannounceResult is the output of the transmission_torrent_reannounce tool.
@@ -26,6 +26,11 @@ func NewTorrentReannounceHandler(
 		_ *mcp.CallToolRequest,
 		params TorrentReannounceParams,
 	) (*mcp.CallToolResult, TorrentReannounceResult, error) {
+		if len(params.IDs) == 0 {
+			return &mcp.CallToolResult{IsError: true}, TorrentReannounceResult{},
+				validationErr(ErrIDsRequired)
+		}
+
 		announceErr := client.TorrentReannounce(ctx, params.IDs)
 		if announceErr != nil {
 			return &mcp.CallToolResult{IsError: true}, TorrentReannounceResult{},

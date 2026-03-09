@@ -9,7 +9,7 @@ import (
 
 // TorrentVerifyParams defines the parameters for the transmission_torrent_verify tool.
 type TorrentVerifyParams struct {
-	IDs []int64 `json:"ids,omitempty" jsonschema:"Torrent IDs to verify (empty = all)"`
+	IDs []int64 `json:"ids" jsonschema:"Torrent IDs to verify"`
 }
 
 // TorrentVerifyResult is the output of the transmission_torrent_verify tool.
@@ -26,6 +26,11 @@ func NewTorrentVerifyHandler(
 		_ *mcp.CallToolRequest,
 		params TorrentVerifyParams,
 	) (*mcp.CallToolResult, TorrentVerifyResult, error) {
+		if len(params.IDs) == 0 {
+			return &mcp.CallToolResult{IsError: true}, TorrentVerifyResult{},
+				validationErr(ErrIDsRequired)
+		}
+
 		verifyErr := client.TorrentVerify(ctx, params.IDs)
 		if verifyErr != nil {
 			return &mcp.CallToolResult{IsError: true}, TorrentVerifyResult{},
