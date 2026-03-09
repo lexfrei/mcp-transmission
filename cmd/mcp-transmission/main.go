@@ -12,6 +12,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/lexfrei/go-transmission/api/transmission"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/lexfrei/mcp-transmission/internal/config"
 	"github.com/lexfrei/mcp-transmission/internal/tools"
@@ -75,29 +76,26 @@ func run() error {
 		cancel()
 	}()
 
-	httpErrCh := make(chan error, 1)
+	group, groupCtx := errgroup.WithContext(ctx)
+
+	group.Go(func() error {
+		runErr := server.Run(groupCtx, &mcp.StdioTransport{})
+		if runErr != nil && groupCtx.Err() == nil {
+			return errors.Wrap(runErr, "stdio server failed")
+		}
+
+		cancel()
+
+		return nil
+	})
 
 	if cfg.HTTPEnabled() {
-		go func() {
-			httpErrCh <- runHTTPServer(ctx, server, cfg.HTTPPort)
-		}()
+		group.Go(func() error {
+			return runHTTPServer(groupCtx, server, cfg.HTTPPort)
+		})
 	}
 
-	runErr := server.Run(ctx, &mcp.StdioTransport{})
-
-	select {
-	case httpErr := <-httpErrCh:
-		if httpErr != nil {
-			return errors.Wrap(httpErr, "HTTP server failed")
-		}
-	default:
-	}
-
-	if runErr != nil && ctx.Err() == nil {
-		return errors.Wrap(runErr, "server run failed")
-	}
-
-	return nil
+	return group.Wait() //nolint:wrapcheck // errors are already wrapped inside group goroutines.
 }
 
 func newServerOptions() *mcp.ServerOptions {
