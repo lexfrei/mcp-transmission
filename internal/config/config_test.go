@@ -12,6 +12,7 @@ func TestLoad_Defaults(t *testing.T) {
 	t.Setenv("TRANSMISSION_USERNAME", "")
 	t.Setenv("TRANSMISSION_PASSWORD", "")
 	t.Setenv("MCP_HTTP_PORT", "")
+	t.Setenv("MCP_HTTP_HOST", "")
 
 	cfg, err := config.Load()
 	if err != nil {
@@ -33,6 +34,10 @@ func TestLoad_Defaults(t *testing.T) {
 	if cfg.HTTPPort != "" {
 		t.Errorf("expected empty HTTPPort, got %s", cfg.HTTPPort)
 	}
+
+	if cfg.HTTPHost != "127.0.0.1" {
+		t.Errorf("expected default HTTPHost 127.0.0.1, got %s", cfg.HTTPHost)
+	}
 }
 
 func TestLoad_CustomValues(t *testing.T) {
@@ -40,6 +45,7 @@ func TestLoad_CustomValues(t *testing.T) {
 	t.Setenv("TRANSMISSION_USERNAME", "admin")
 	t.Setenv("TRANSMISSION_PASSWORD", "secret")
 	t.Setenv("MCP_HTTP_PORT", "8080")
+	t.Setenv("MCP_HTTP_HOST", "0.0.0.0")
 
 	cfg, err := config.Load()
 	if err != nil {
@@ -60,6 +66,21 @@ func TestLoad_CustomValues(t *testing.T) {
 
 	if cfg.HTTPPort != "8080" {
 		t.Errorf("expected HTTPPort 8080, got %s", cfg.HTTPPort)
+	}
+
+	if cfg.HTTPHost != "0.0.0.0" {
+		t.Errorf("expected HTTPHost 0.0.0.0, got %s", cfg.HTTPHost)
+	}
+}
+
+func TestConfig_HTTPAddr(t *testing.T) {
+	cfg := &config.Config{
+		HTTPHost: "192.168.1.1",
+		HTTPPort: "9090",
+	}
+
+	if got := cfg.HTTPAddr(); got != "192.168.1.1:9090" {
+		t.Errorf("HTTPAddr() = %s, want 192.168.1.1:9090", got)
 	}
 }
 

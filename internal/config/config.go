@@ -21,6 +21,7 @@ type Config struct {
 	Username        string
 	Password        string
 	HTTPPort        string
+	HTTPHost        string
 }
 
 // Load reads configuration from environment variables and returns a Config.
@@ -39,11 +40,17 @@ func Load() (*Config, error) {
 		}
 	}
 
+	httpHost := os.Getenv("MCP_HTTP_HOST")
+	if httpHost == "" {
+		httpHost = "127.0.0.1"
+	}
+
 	return &Config{
 		TransmissionURL: transmissionURL,
 		Username:        os.Getenv("TRANSMISSION_USERNAME"),
 		Password:        os.Getenv("TRANSMISSION_PASSWORD"),
 		HTTPPort:        httpPort,
+		HTTPHost:        httpHost,
 	}, nil
 }
 
@@ -55,4 +62,9 @@ func (c *Config) HasAuth() bool {
 // HTTPEnabled returns true if HTTP transport should be enabled.
 func (c *Config) HTTPEnabled() bool {
 	return c.HTTPPort != ""
+}
+
+// HTTPAddr returns the full host:port address for the HTTP server.
+func (c *Config) HTTPAddr() string {
+	return c.HTTPHost + ":" + c.HTTPPort
 }

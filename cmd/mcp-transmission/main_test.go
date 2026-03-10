@@ -47,14 +47,14 @@ func TestRunHTTPServer_PortInUse(t *testing.T) {
 	}
 	defer listener.Close()
 
-	_, port, _ := net.SplitHostPort(listener.Addr().String())
+	addr := listener.Addr().String()
 
 	server := mcp.NewServer(
 		&mcp.Implementation{Name: "test", Version: "0.0.0"},
 		nil,
 	)
 
-	runErr := runHTTPServer(t.Context(), server, port)
+	runErr := runHTTPServer(t.Context(), server, addr)
 	if runErr == nil {
 		t.Error("expected error when port is in use")
 	}
@@ -100,7 +100,7 @@ func TestRunHTTPServer_GracefulShutdown(t *testing.T) {
 	errCh := make(chan error, 1)
 
 	go func() {
-		errCh <- runHTTPServer(ctx, server, "0")
+		errCh <- runHTTPServer(ctx, server, ":0")
 	}()
 
 	cancel()

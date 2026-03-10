@@ -102,7 +102,7 @@ func run() error {
 
 	if httpEnabled {
 		group.Go(func() error {
-			return runHTTPServer(groupCtx, server, cfg.HTTPPort)
+			return runHTTPServer(groupCtx, server, cfg.HTTPAddr())
 		})
 	}
 
@@ -149,7 +149,7 @@ func registerTools(server *mcp.Server, client transmission.Client) {
 // runHTTPServer starts an HTTP/SSE transport for the MCP server.
 // Sharing a single *mcp.Server across transports is safe: the SDK
 // protects internal state (sessions, tools, subscriptions) with a sync.Mutex.
-func runHTTPServer(ctx context.Context, server *mcp.Server, port string) error {
+func runHTTPServer(ctx context.Context, server *mcp.Server, addr string) error {
 	handler := mcp.NewStreamableHTTPHandler(
 		func(_ *http.Request) *mcp.Server {
 			return server
@@ -158,7 +158,7 @@ func runHTTPServer(ctx context.Context, server *mcp.Server, port string) error {
 	)
 
 	httpServer := &http.Server{
-		Addr:              ":" + port,
+		Addr:              addr,
 		Handler:           handler,
 		ReadHeaderTimeout: readHeaderTimeout,
 	}
@@ -176,7 +176,7 @@ func runHTTPServer(ctx context.Context, server *mcp.Server, port string) error {
 		}
 	}()
 
-	log.Printf("HTTP server listening on :%s", port)
+	log.Printf("HTTP server listening on %s", addr)
 
 	listenErr := httpServer.ListenAndServe()
 	if errors.Is(listenErr, http.ErrServerClosed) {
