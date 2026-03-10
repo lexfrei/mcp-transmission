@@ -46,6 +46,7 @@ Built on top of [go-transmission](https://github.com/lexfrei/go-transmission) li
 | `TRANSMISSION_USERNAME` | HTTP Basic Auth username | (none) |
 | `TRANSMISSION_PASSWORD` | HTTP Basic Auth password | (none) |
 | `MCP_HTTP_PORT` | Optional HTTP/SSE transport port | (disabled) |
+| `MCP_HTTP_HOST` | Bind address for HTTP transport | `127.0.0.1` |
 
 ## Usage
 

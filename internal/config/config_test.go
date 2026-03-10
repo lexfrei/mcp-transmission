@@ -74,13 +74,29 @@ func TestLoad_CustomValues(t *testing.T) {
 }
 
 func TestConfig_HTTPAddr(t *testing.T) {
-	cfg := &config.Config{
-		HTTPHost: "192.168.1.1",
-		HTTPPort: "9090",
+	tests := []struct {
+		name string
+		host string
+		port string
+		want string
+	}{
+		{"ipv4", "192.168.1.1", "9090", "192.168.1.1:9090"},
+		{"ipv6", "::1", "8080", "[::1]:8080"},
+		{"ipv6 full", "2001:db8::1", "443", "[2001:db8::1]:443"},
+		{"localhost", "127.0.0.1", "3000", "127.0.0.1:3000"},
 	}
 
-	if got := cfg.HTTPAddr(); got != "192.168.1.1:9090" {
-		t.Errorf("HTTPAddr() = %s, want 192.168.1.1:9090", got)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := &config.Config{
+				HTTPHost: tt.host,
+				HTTPPort: tt.port,
+			}
+
+			if got := cfg.HTTPAddr(); got != tt.want {
+				t.Errorf("HTTPAddr() = %s, want %s", got, tt.want)
+			}
+		})
 	}
 }
 

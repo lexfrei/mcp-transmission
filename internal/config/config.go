@@ -2,6 +2,7 @@
 package config
 
 import (
+	"net"
 	"os"
 	"strconv"
 
@@ -65,6 +66,7 @@ func (c *Config) HTTPEnabled() bool {
 }
 
 // HTTPAddr returns the full host:port address for the HTTP server.
+// Uses net.JoinHostPort for correct IPv6 bracket handling.
 func (c *Config) HTTPAddr() string {
-	return c.HTTPHost + ":" + c.HTTPPort
+	return net.JoinHostPort(c.HTTPHost, c.HTTPPort)
 }
