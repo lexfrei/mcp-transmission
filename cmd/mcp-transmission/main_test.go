@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lexfrei/mcp-transmission/internal/testutil"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -32,7 +33,7 @@ func TestRegisterTools(t *testing.T) {
 		nil,
 	)
 
-	client := &noopClient{}
+	client := &testutil.NoopClient{}
 
 	registerTools(server, client)
 }
