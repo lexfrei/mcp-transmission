@@ -82,6 +82,7 @@ func run() error {
 	}()
 
 	group, groupCtx := errgroup.WithContext(ctx)
+	httpEnabled := cfg.HTTPEnabled()
 
 	group.Go(func() error {
 		runErr := server.Run(groupCtx, &mcp.StdioTransport{})
@@ -89,12 +90,17 @@ func run() error {
 			return errors.Wrap(runErr, "stdio server failed")
 		}
 
-		cancel()
+		// Only cancel when HTTP is not enabled; otherwise let the
+		// HTTP transport keep running after stdin closes (e.g. in
+		// container deployments without an interactive terminal).
+		if !httpEnabled {
+			cancel()
+		}
 
 		return nil
 	})
 
-	if cfg.HTTPEnabled() {
+	if httpEnabled {
 		group.Go(func() error {
 			return runHTTPServer(groupCtx, server, cfg.HTTPPort)
 		})
