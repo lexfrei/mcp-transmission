@@ -8,6 +8,8 @@ RUN echo 'nobody:x:65534:65534:Nobody:/:' > /tmp/passwd && \
     apk add --no-cache ca-certificates
 
 WORKDIR /build
+COPY go.mod go.sum ./
+RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 go build -ldflags "-s -w -X main.version=${VERSION} -X main.revision=${REVISION}" -trimpath ./cmd/mcp-transmission
 
