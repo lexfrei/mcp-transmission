@@ -64,7 +64,7 @@ Add to your `.mcp.json`:
         "-e", "TRANSMISSION_URL",
         "-e", "TRANSMISSION_USERNAME",
         "-e", "TRANSMISSION_PASSWORD",
-        "mcp-transmission:latest"
+        "ghcr.io/lexfrei/mcp-transmission:latest"
       ],
       "env": {
         "TRANSMISSION_URL": "http://host.docker.internal:9091/transmission/rpc"
@@ -73,8 +73,6 @@ Add to your `.mcp.json`:
   }
 }
 ```
-
-Build the image first: `docker build --file Containerfile --tag mcp-transmission:latest .`
 
 Set `TRANSMISSION_USERNAME` and `TRANSMISSION_PASSWORD` as environment variables on your host if your Transmission instance requires authentication. They are passed through to the container via `-e` flags.
 
@@ -86,15 +84,24 @@ TRANSMISSION_URL=http://localhost:9091/transmission/rpc ./mcp-transmission
 
 ### Container
 
-> **Note:** CI/CD for publishing container images is not yet configured.
-> Build the image locally using the instructions below.
+Container images are published to GHCR on every release:
 
 ```bash
-docker build --file Containerfile --tag mcp-transmission .
+docker pull ghcr.io/lexfrei/mcp-transmission:latest
 docker run --rm -i \
   -e TRANSMISSION_URL=http://host.docker.internal:9091/transmission/rpc \
-  mcp-transmission
+  ghcr.io/lexfrei/mcp-transmission:latest
 ```
+
+Images are signed with [cosign](https://github.com/sigstore/cosign) (keyless). Verify:
+
+```bash
+cosign verify ghcr.io/lexfrei/mcp-transmission:latest \
+  --certificate-identity-regexp=https://github.com/lexfrei/mcp-transmission \
+  --certificate-oidc-issuer=https://token.actions.githubusercontent.com
+```
+
+Available platforms: `linux/amd64`, `linux/arm64`.
 
 ## Requirements
 
