@@ -40,18 +40,13 @@
       "matchManagers": ["dockerfile"],
       "matchPackageNames": ["docker.io/library/golang"],
       "versioning": "docker"
-    }
-  ],
-  "customManagers": [
+    },
     {
-      "customType": "regex",
-      "description": "Update Go toolchain version in go.mod",
-      "fileMatch": ["^go\\.mod$"],
-      "matchStrings": [
-        "^go (?<currentValue>[\\d.]+)$"
-      ],
-      "depNameTemplate": "golang",
-      "datasourceTemplate": "golang-version"
+      "description": "Bump Go version in go.mod to latest minor",
+      "matchManagers": ["gomod"],
+      "matchDepNames": ["go"],
+      "matchDepTypes": ["golang"],
+      "rangeStrategy": "bump"
     }
   ]
 }
