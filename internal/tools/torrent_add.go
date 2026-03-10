@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"path/filepath"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 
@@ -64,7 +64,7 @@ func NewTorrentAddHandler(client transmission.Client) mcp.ToolHandlerFor[Torrent
 			}
 		}
 
-		if params.DownloadDir != "" && !filepath.IsAbs(params.DownloadDir) {
+		if params.DownloadDir != "" && !strings.HasPrefix(params.DownloadDir, "/") {
 			return &mcp.CallToolResult{IsError: true}, TorrentAddResult{},
 				validationErr(ErrAbsolutePathRequired)
 		}

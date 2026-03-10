@@ -3,7 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
-	"path/filepath"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 
@@ -39,7 +39,7 @@ func NewFreeSpaceHandler(client transmission.Client) mcp.ToolHandlerFor[FreeSpac
 				validationErr(ErrPathRequired)
 		}
 
-		if !filepath.IsAbs(params.Path) {
+		if !strings.HasPrefix(params.Path, "/") {
 			return &mcp.CallToolResult{IsError: true}, FreeSpaceResult{},
 				validationErr(ErrAbsolutePathRequired)
 		}

@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"path/filepath"
 	"strings"
 
 	"github.com/cockroachdb/errors"
@@ -108,7 +107,7 @@ func validateSessionLimits(params *SessionSetParams) error {
 		return validationErr(ErrEmptyDownloadDir)
 	}
 
-	if params.DownloadDir != nil && !filepath.IsAbs(*params.DownloadDir) {
+	if params.DownloadDir != nil && !strings.HasPrefix(*params.DownloadDir, "/") {
 		return validationErr(ErrAbsolutePathRequired)
 	}
 
