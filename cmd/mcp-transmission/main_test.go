@@ -90,18 +90,44 @@ func TestSignalGoroutineExitsOnCancel(t *testing.T) {
 }
 
 func TestRunHTTPServer_GracefulShutdown(t *testing.T) {
+	// Find a free port so we can confirm the server is listening before cancel.
+	lc := net.ListenConfig{}
+
+	listener, listenErr := lc.Listen(t.Context(), "tcp", "127.0.0.1:0")
+	if listenErr != nil {
+		t.Fatalf("failed to find free port: %v", listenErr)
+	}
+
+	addr := listener.Addr().String()
+	listener.Close()
+
 	server := mcp.NewServer(
 		&mcp.Implementation{Name: "test", Version: "0.0.0"},
 		nil,
 	)
 
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	errCh := make(chan error, 1)
 
 	go func() {
-		errCh <- runHTTPServer(ctx, server, ":0")
+		errCh <- runHTTPServer(ctx, server, addr)
 	}()
+
+	// Wait for the server to start listening before triggering shutdown.
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		dialer := net.Dialer{Timeout: 50 * time.Millisecond}
+		conn, dialErr := dialer.DialContext(t.Context(), "tcp", addr)
+		if dialErr == nil {
+			conn.Close()
+
+			break
+		}
+
+		time.Sleep(10 * time.Millisecond)
+	}
 
 	cancel()
 
