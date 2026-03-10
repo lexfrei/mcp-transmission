@@ -9,6 +9,7 @@
   ],
   "labels": ["dependencies"],
   "rangeStrategy": "pin",
+  "platformAutomerge": true,
   "postUpdateOptions": ["gomodTidy"],
   "packageRules": [
     {
