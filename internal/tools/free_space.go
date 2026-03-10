@@ -50,6 +50,10 @@ func NewFreeSpaceHandler(client transmission.Client) mcp.ToolHandlerFor[FreeSpac
 				transmissionErr("failed to check free space", err)
 		}
 
+		if space == nil {
+			return nil, FreeSpaceResult{Output: "No free space data returned"}, nil
+		}
+
 		freeHuman := formatBytes(space.SizeBytes)
 
 		result := FreeSpaceResult{

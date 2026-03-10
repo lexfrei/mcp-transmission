@@ -55,6 +55,28 @@ func TestFreeSpaceHandler_MissingPath(t *testing.T) {
 	}
 }
 
+func TestFreeSpaceHandler_NilResponse(t *testing.T) {
+	client := newMockClient()
+	client.freeSpaceResult = nil
+
+	handler := tools.NewFreeSpaceHandler(client)
+
+	params := tools.FreeSpaceParams{Path: "/downloads"}
+
+	result, output, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if result != nil && result.IsError {
+		t.Error("expected success")
+	}
+
+	if output.Output == "" {
+		t.Error("expected non-empty output for nil response")
+	}
+}
+
 func TestFreeSpaceHandler_RelativePath(t *testing.T) {
 	client := newMockClient()
 	handler := tools.NewFreeSpaceHandler(client)
