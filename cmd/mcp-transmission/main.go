@@ -25,8 +25,11 @@ const (
 	shutdownTimeout   = 5 * time.Second
 )
 
-// version is set via ldflags at build time.
-var version = "dev"
+// version and revision are set via ldflags at build time.
+var (
+	version  = "dev"
+	revision = "unknown"
+)
 
 func main() {
 	err := run()
@@ -58,7 +61,7 @@ func run() error {
 	server := mcp.NewServer(
 		&mcp.Implementation{
 			Name:    serverName,
-			Version: version,
+			Version: version + "+" + revision,
 		},
 		serverOpts,
 	)
