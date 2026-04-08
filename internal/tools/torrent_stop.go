@@ -46,5 +46,10 @@ func TorrentStopTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "transmission_torrent_stop",
 		Description: "Stop (pause) one or more torrents",
+		Annotations: &mcp.ToolAnnotations{
+			Title:           "Stop Torrents",
+			IdempotentHint:  true,
+			DestructiveHint: new(bool),
+		},
 	}
 }

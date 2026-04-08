@@ -64,6 +64,10 @@ func NewTorrentRemoveHandler(client transmission.Client) mcp.ToolHandlerFor[Torr
 func TorrentRemoveTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "transmission_torrent_remove",
-		Description: "Remove one or more torrents. Set deleteLocalData=true AND confirmDelete=true to also delete files from disk (DESTRUCTIVE)",
+		Description: "Remove one or more torrents. Set deleteLocalData=true to also delete files from disk (DESTRUCTIVE, requires confirmation via elicitation)",
+		Annotations: &mcp.ToolAnnotations{
+			Title:          "Remove Torrents",
+			IdempotentHint: true,
+		},
 	}
 }

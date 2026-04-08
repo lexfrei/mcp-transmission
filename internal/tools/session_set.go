@@ -73,6 +73,11 @@ func SessionSetTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "transmission_session_set",
 		Description: "Modify Transmission session settings: speed limits, alt speed (turtle mode), download directory, peer limits",
+		Annotations: &mcp.ToolAnnotations{
+			Title:           "Modify Session Config",
+			IdempotentHint:  true,
+			DestructiveHint: new(bool),
+		},
 	}
 }
 

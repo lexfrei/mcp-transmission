@@ -55,6 +55,11 @@ func TorrentStartTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "transmission_torrent_start",
 		Description: "Start one or more torrents. Use 'now' to bypass queue",
+		Annotations: &mcp.ToolAnnotations{
+			Title:           "Start Torrents",
+			IdempotentHint:  true,
+			DestructiveHint: new(bool),
+		},
 	}
 }
 

@@ -78,6 +78,10 @@ func TorrentDetailsTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "transmission_torrent_details",
 		Description: "Get detailed information about a specific torrent including files, trackers, and peers",
+		Annotations: &mcp.ToolAnnotations{
+			Title:        "Torrent Details",
+			ReadOnlyHint: true,
+		},
 	}
 }
 

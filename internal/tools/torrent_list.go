@@ -61,6 +61,10 @@ func TorrentListTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "transmission_torrent_list",
 		Description: "List all torrents with their status, progress, speed, and basic info",
+		Annotations: &mcp.ToolAnnotations{
+			Title:        "List Torrents",
+			ReadOnlyHint: true,
+		},
 	}
 }
 

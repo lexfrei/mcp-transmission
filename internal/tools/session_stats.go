@@ -59,6 +59,10 @@ func SessionStatsTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "transmission_session_stats",
 		Description: "Get Transmission session statistics: speeds, torrent counts, and cumulative transfer totals",
+		Annotations: &mcp.ToolAnnotations{
+			Title:        "Session Statistics",
+			ReadOnlyHint: true,
+		},
 	}
 }
 

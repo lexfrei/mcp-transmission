@@ -48,5 +48,10 @@ func TorrentReannounceTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "transmission_torrent_reannounce",
 		Description: "Force immediate tracker announce for one or more torrents",
+		Annotations: &mcp.ToolAnnotations{
+			Title:           "Reannounce Torrents",
+			IdempotentHint:  true,
+			DestructiveHint: new(bool),
+		},
 	}
 }

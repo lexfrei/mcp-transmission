@@ -72,6 +72,11 @@ func TorrentSetTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "transmission_torrent_set",
 		Description: "Modify properties of one or more torrents (speed limits, labels, seed ratio, etc.)",
+		Annotations: &mcp.ToolAnnotations{
+			Title:           "Modify Torrent Properties",
+			IdempotentHint:  true,
+			DestructiveHint: new(bool),
+		},
 	}
 }
 

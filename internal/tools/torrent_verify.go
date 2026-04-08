@@ -48,5 +48,10 @@ func TorrentVerifyTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "transmission_torrent_verify",
 		Description: "Verify local data integrity for one or more torrents",
+		Annotations: &mcp.ToolAnnotations{
+			Title:           "Verify Torrents",
+			IdempotentHint:  true,
+			DestructiveHint: new(bool),
+		},
 	}
 }
