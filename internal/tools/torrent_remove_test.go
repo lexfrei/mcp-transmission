@@ -132,39 +132,63 @@ func TestTorrentRemoveHandler_DeleteLocalData_ElicitCancel(t *testing.T) {
 	}
 }
 
-func TestTorrentRemoveHandler_DeleteLocalData_ElicitError(t *testing.T) {
+func TestTorrentRemoveHandler_DeleteLocalData_ElicitErrorFallbackConfirm(t *testing.T) {
 	client := newMockClient()
-	elicitor := &mockElicitor{
-		err: errMock,
-	}
+	elicitor := &mockElicitor{err: errMock}
 	handler := tools.NewTorrentRemoveHandlerWithElicitor(client, elicitor)
 
+	// Elicitation fails but confirmDelete=true acts as fallback.
+	params := tools.TorrentRemoveParams{
+		IDs:             []int64{1},
+		DeleteLocalData: true,
+		ConfirmDelete:   true,
+	}
+
+	result, output, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if err != nil {
+		t.Fatalf("handler failed: %v", err)
+	}
+
+	if result != nil && result.IsError {
+		t.Error("expected success with confirmDelete fallback")
+	}
+
+	if output.Message == "" {
+		t.Error("expected non-empty message")
+	}
+}
+
+func TestTorrentRemoveHandler_DeleteLocalData_ElicitErrorNoFallback(t *testing.T) {
+	client := newMockClient()
+	elicitor := &mockElicitor{err: errMock}
+	handler := tools.NewTorrentRemoveHandlerWithElicitor(client, elicitor)
+
+	// Elicitation fails and confirmDelete is false — should error.
 	params := tools.TorrentRemoveParams{
 		IDs:             []int64{1},
 		DeleteLocalData: true,
 	}
 
 	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
-	if !errors.Is(err, tools.ErrElicitationFailed) {
-		t.Errorf("expected ErrElicitationFailed, got: %v", err)
+	if !errors.Is(err, tools.ErrValidation) {
+		t.Errorf("expected ErrValidation (confirm required), got: %v", err)
 	}
 }
 
 func TestTorrentRemoveHandler_DeleteLocalData_ElicitNilResult(t *testing.T) {
 	client := newMockClient()
-	elicitor := &mockElicitor{
-		result: nil,
-	}
+	elicitor := &mockElicitor{result: nil}
 	handler := tools.NewTorrentRemoveHandlerWithElicitor(client, elicitor)
 
+	// Nil result without confirmDelete fallback — should error.
 	params := tools.TorrentRemoveParams{
 		IDs:             []int64{1},
 		DeleteLocalData: true,
 	}
 
 	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
-	if !errors.Is(err, tools.ErrElicitationFailed) {
-		t.Errorf("expected ErrElicitationFailed for nil result, got: %v", err)
+	if !errors.Is(err, tools.ErrValidation) {
+		t.Errorf("expected ErrValidation for nil result without fallback, got: %v", err)
 	}
 }
 
@@ -187,18 +211,44 @@ func TestTorrentRemoveHandler_NoDeleteLocalData_SkipsElicitation(t *testing.T) {
 	}
 }
 
-func TestTorrentRemoveHandler_DeleteLocalData_NilSession(t *testing.T) {
+func TestTorrentRemoveHandler_DeleteLocalData_NilSessionWithConfirm(t *testing.T) {
 	client := newMockClient()
 	handler := tools.NewTorrentRemoveHandler(client)
 
+	// No session (no elicitation), but confirmDelete=true as fallback.
+	params := tools.TorrentRemoveParams{
+		IDs:             []int64{1},
+		DeleteLocalData: true,
+		ConfirmDelete:   true,
+	}
+
+	result, output, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if err != nil {
+		t.Fatalf("handler failed: %v", err)
+	}
+
+	if result != nil && result.IsError {
+		t.Error("expected success with confirmDelete fallback")
+	}
+
+	if output.Message == "" {
+		t.Error("expected non-empty message")
+	}
+}
+
+func TestTorrentRemoveHandler_DeleteLocalData_NilSessionNoConfirm(t *testing.T) {
+	client := newMockClient()
+	handler := tools.NewTorrentRemoveHandler(client)
+
+	// No session, no confirmDelete — should error.
 	params := tools.TorrentRemoveParams{
 		IDs:             []int64{1},
 		DeleteLocalData: true,
 	}
 
 	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
-	if !errors.Is(err, tools.ErrElicitationFailed) {
-		t.Errorf("expected ErrElicitationFailed when session is nil, got: %v", err)
+	if !errors.Is(err, tools.ErrValidation) {
+		t.Errorf("expected ErrValidation, got: %v", err)
 	}
 }
 
@@ -206,26 +256,41 @@ func TestTorrentRemoveHandler_DeleteLocalData_NilRequest(t *testing.T) {
 	client := newMockClient()
 	handler := tools.NewTorrentRemoveHandler(client)
 
+	// Nil request, no confirmDelete — should error.
 	params := tools.TorrentRemoveParams{
 		IDs:             []int64{1},
 		DeleteLocalData: true,
 	}
 
 	_, _, err := handler(context.Background(), nil, params)
-	if !errors.Is(err, tools.ErrElicitationFailed) {
-		t.Errorf("expected ErrElicitationFailed when request is nil, got: %v", err)
+	if !errors.Is(err, tools.ErrValidation) {
+		t.Errorf("expected ErrValidation when request is nil, got: %v", err)
+	}
+}
+
+func TestTorrentRemoveHandler_DeleteWithAccept_TransmissionError(t *testing.T) {
+	client := newMockClient()
+	client.err = errMock
+	elicitor := &mockElicitor{result: &mcp.ElicitResult{Action: "accept"}}
+	handler := tools.NewTorrentRemoveHandlerWithElicitor(client, elicitor)
+
+	params := tools.TorrentRemoveParams{
+		IDs:             []int64{1},
+		DeleteLocalData: true,
+	}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrTransmission) {
+		t.Errorf("expected ErrTransmission, got: %v", err)
 	}
 }
 
 func TestTorrentRemoveHandler_Error(t *testing.T) {
 	client := newMockClient()
 	client.err = errMock
-
-	// Use an accepting elicitor to ensure the error path tests the Transmission
-	// client error, not an elicitation error (deleteLocalData is false here, but
-	// this makes the test resilient to future changes in default params).
 	handler := tools.NewTorrentRemoveHandler(client)
 
+	// deleteLocalData=false, so no elicitation needed — tests Transmission error path.
 	params := tools.TorrentRemoveParams{IDs: []int64{1}}
 
 	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)

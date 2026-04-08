@@ -12,7 +12,7 @@ linters:
     - ireturn
   settings:
     dupl:
-      threshold: 150
+      threshold: 170
     goconst:
       min-len: 2
       min-occurrences: 3

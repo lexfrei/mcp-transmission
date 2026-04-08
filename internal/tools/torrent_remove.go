@@ -16,11 +16,18 @@ var ErrIDsRequired = errors.New("at least one torrent ID is required")
 // ErrElicitationFailed is returned when the elicitation request fails.
 var ErrElicitationFailed = errors.New("failed to request deletion confirmation")
 
-// ErrNoElicitation is returned when no elicitation support is available.
-var ErrNoElicitation = errors.New("no elicitation support available")
+// ErrDeleteConfirmRequired is returned when deleteLocalData is true but neither
+// elicitation nor confirmDelete confirmed the operation.
+var ErrDeleteConfirmRequired = errors.New(
+	"deleteLocalData requires confirmation: " +
+		"either use a client that supports elicitation, " +
+		"or set confirmDelete=true",
+)
 
-// ErrNilElicitResult is returned when the elicitor returns a nil result without an error.
-var ErrNilElicitResult = errors.New("elicitation returned nil result")
+var (
+	errNoElicitation   = errors.New("no elicitation support available")
+	errNilElicitResult = errors.New("elicitation returned nil result")
+)
 
 // Elicitor abstracts the MCP elicitation capability for testability.
 type Elicitor interface {
@@ -31,6 +38,7 @@ type Elicitor interface {
 type TorrentRemoveParams struct {
 	IDs             []int64 `json:"ids"                       jsonschema:"Torrent IDs to remove"`
 	DeleteLocalData bool    `json:"deleteLocalData,omitempty" jsonschema:"Also delete downloaded files (DESTRUCTIVE, requires confirmation)"`
+	ConfirmDelete   bool    `json:"confirmDelete,omitempty"   jsonschema:"Fallback confirmation when client lacks elicitation support"`
 }
 
 // TorrentRemoveResult is the output of the transmission_torrent_remove tool.
@@ -40,16 +48,25 @@ type TorrentRemoveResult struct {
 
 // NewTorrentRemoveHandler creates a handler for the transmission_torrent_remove tool.
 // It uses the MCP session from the request for elicitation when deleteLocalData is true.
-func NewTorrentRemoveHandler(client transmission.Client) mcp.ToolHandlerFor[TorrentRemoveParams, TorrentRemoveResult] {
+// Falls back to the confirmDelete parameter if elicitation is unavailable.
+func NewTorrentRemoveHandler(
+	client transmission.Client,
+) mcp.ToolHandlerFor[TorrentRemoveParams, TorrentRemoveResult] {
 	return newTorrentRemoveHandler(client, nil)
 }
 
 // NewTorrentRemoveHandlerWithElicitor creates a handler with an explicit Elicitor for testing.
-func NewTorrentRemoveHandlerWithElicitor(client transmission.Client, elicitor Elicitor) mcp.ToolHandlerFor[TorrentRemoveParams, TorrentRemoveResult] {
+func NewTorrentRemoveHandlerWithElicitor(
+	client transmission.Client,
+	elicitor Elicitor,
+) mcp.ToolHandlerFor[TorrentRemoveParams, TorrentRemoveResult] {
 	return newTorrentRemoveHandler(client, elicitor)
 }
 
-func newTorrentRemoveHandler(client transmission.Client, elicitor Elicitor) mcp.ToolHandlerFor[TorrentRemoveParams, TorrentRemoveResult] {
+func newTorrentRemoveHandler(
+	client transmission.Client,
+	elicitor Elicitor,
+) mcp.ToolHandlerFor[TorrentRemoveParams, TorrentRemoveResult] {
 	return func(
 		ctx context.Context,
 		req *mcp.CallToolRequest,
@@ -61,10 +78,10 @@ func newTorrentRemoveHandler(client transmission.Client, elicitor Elicitor) mcp.
 		}
 
 		if params.DeleteLocalData {
-			confirmed, confirmErr := confirmDeletion(ctx, req, elicitor, params.IDs)
+			confirmed, confirmErr := confirmDeletion(ctx, req, elicitor, &params)
 			if confirmErr != nil {
 				return &mcp.CallToolResult{IsError: true}, TorrentRemoveResult{},
-					errors.Mark(errors.Wrap(confirmErr, "elicitation failed"), ErrElicitationFailed)
+					confirmErr
 			}
 
 			if !confirmed {
@@ -74,10 +91,10 @@ func newTorrentRemoveHandler(client transmission.Client, elicitor Elicitor) mcp.
 			}
 		}
 
-		err := client.TorrentRemove(ctx, params.IDs, params.DeleteLocalData)
-		if err != nil {
+		removeErr := client.TorrentRemove(ctx, params.IDs, params.DeleteLocalData)
+		if removeErr != nil {
 			return &mcp.CallToolResult{IsError: true}, TorrentRemoveResult{},
-				transmissionErr("failed to remove torrents", err)
+				transmissionErr("failed to remove torrents", removeErr)
 		}
 
 		msg := fmt.Sprintf("Removed %d torrent(s)", len(params.IDs))
@@ -89,22 +106,43 @@ func newTorrentRemoveHandler(client transmission.Client, elicitor Elicitor) mcp.
 	}
 }
 
+// confirmDeletion tries elicitation first. If elicitation is unavailable (no session,
+// no elicitor, or the client returns an error), it falls back to the confirmDelete parameter.
 func confirmDeletion(
+	ctx context.Context,
+	req *mcp.CallToolRequest,
+	elicitor Elicitor,
+	params *TorrentRemoveParams,
+) (bool, error) {
+	confirmed, elicitErr := tryElicit(ctx, req, elicitor, params.IDs)
+	if elicitErr == nil {
+		return confirmed, nil
+	}
+
+	// Elicitation unavailable or failed — fall back to confirmDelete param.
+	if params.ConfirmDelete {
+		return true, nil
+	}
+
+	return false, validationErr(ErrDeleteConfirmRequired)
+}
+
+func tryElicit(
 	ctx context.Context,
 	req *mcp.CallToolRequest,
 	elicitor Elicitor,
 	ids []int64,
 ) (bool, error) {
-	resolvedElicitor := elicitor
-	if resolvedElicitor == nil && req != nil && req.Session != nil {
-		resolvedElicitor = req.Session
+	resolved := elicitor
+	if resolved == nil && req != nil && req.Session != nil {
+		resolved = req.Session
 	}
 
-	if resolvedElicitor == nil {
-		return false, ErrNoElicitation
+	if resolved == nil {
+		return false, errNoElicitation
 	}
 
-	result, elicitErr := resolvedElicitor.Elicit(ctx, &mcp.ElicitParams{
+	result, elicitErr := resolved.Elicit(ctx, &mcp.ElicitParams{
 		Message: fmt.Sprintf(
 			"Are you sure you want to permanently delete local data for %d torrent(s)? This action cannot be undone.",
 			len(ids),
@@ -115,7 +153,7 @@ func confirmDeletion(
 	}
 
 	if result == nil {
-		return false, ErrNilElicitResult
+		return false, errNilElicitResult
 	}
 
 	return result.Action == "accept", nil
@@ -124,13 +162,17 @@ func confirmDeletion(
 // TorrentRemoveTool returns the MCP tool definition for transmission_torrent_remove.
 func TorrentRemoveTool() *mcp.Tool {
 	return &mcp.Tool{
-		Name:        "transmission_torrent_remove",
-		Description: "Remove one or more torrents. Set deleteLocalData=true to also delete files from disk (DESTRUCTIVE, requires confirmation via elicitation)",
+		Name: "transmission_torrent_remove",
+		Description: "Remove one or more torrents. Set deleteLocalData=true to also delete files from disk (DESTRUCTIVE). " +
+			"Confirmation is requested via elicitation if the client supports it; " +
+			"otherwise set confirmDelete=true as a fallback.",
 		Annotations: &mcp.ToolAnnotations{
 			Title:           "Remove Torrents",
 			DestructiveHint: ptrBool(true),
-			// Idempotent: removing an already-removed torrent is a no-op in Transmission.
+			// Idempotent: removing an already-removed torrent is a no-op in Transmission RPC.
 			// Even with deleteLocalData=true, the second call has no effect (files already gone).
+			// Note: elicitation-capable clients will see a confirmation prompt on each call,
+			// but the underlying operation remains idempotent.
 			IdempotentHint: true,
 		},
 	}
