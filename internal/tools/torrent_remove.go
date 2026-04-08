@@ -13,9 +13,6 @@ import (
 // ErrIDsRequired is returned when the ids parameter is missing.
 var ErrIDsRequired = errors.New("at least one torrent ID is required")
 
-// ErrElicitationFailed is returned when the elicitation request fails.
-var ErrElicitationFailed = errors.New("failed to request deletion confirmation")
-
 // ErrDeleteConfirmRequired is returned when deleteLocalData is true but neither
 // elicitation nor confirmDelete confirmed the operation.
 var ErrDeleteConfirmRequired = errors.New(
