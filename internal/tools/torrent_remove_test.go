@@ -49,29 +49,16 @@ func TestTorrentRemoveHandler_MissingIDs(t *testing.T) {
 	}
 }
 
-func TestTorrentRemoveHandler_DeleteWithoutConfirm(t *testing.T) {
+func TestTorrentRemoveHandler_DeleteLocalData_ElicitAccept(t *testing.T) {
 	client := newMockClient()
-	handler := tools.NewTorrentRemoveHandler(client)
+	elicitor := &mockElicitor{
+		result: &mcp.ElicitResult{Action: "accept"},
+	}
+	handler := tools.NewTorrentRemoveHandlerWithElicitor(client, elicitor)
 
 	params := tools.TorrentRemoveParams{
 		IDs:             []int64{1},
 		DeleteLocalData: true,
-	}
-
-	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
-	if !errors.Is(err, tools.ErrValidation) {
-		t.Errorf("expected ErrValidation when confirmDelete is false, got: %v", err)
-	}
-}
-
-func TestTorrentRemoveHandler_DeleteWithConfirm(t *testing.T) {
-	client := newMockClient()
-	handler := tools.NewTorrentRemoveHandler(client)
-
-	params := tools.TorrentRemoveParams{
-		IDs:             []int64{1},
-		DeleteLocalData: true,
-		ConfirmDelete:   true,
 	}
 
 	result, output, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
@@ -86,6 +73,99 @@ func TestTorrentRemoveHandler_DeleteWithConfirm(t *testing.T) {
 	if output.Message == "" {
 		t.Error("expected non-empty message")
 	}
+
+	if !elicitor.called {
+		t.Error("expected elicitation to be called")
+	}
+}
+
+func TestTorrentRemoveHandler_DeleteLocalData_ElicitDecline(t *testing.T) {
+	client := newMockClient()
+	elicitor := &mockElicitor{
+		result: &mcp.ElicitResult{Action: "decline"},
+	}
+	handler := tools.NewTorrentRemoveHandlerWithElicitor(client, elicitor)
+
+	params := tools.TorrentRemoveParams{
+		IDs:             []int64{1},
+		DeleteLocalData: true,
+	}
+
+	result, output, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if err != nil {
+		t.Fatalf("handler failed: %v", err)
+	}
+
+	if result != nil && result.IsError {
+		t.Error("expected no error flag on decline")
+	}
+
+	if output.Message == "" {
+		t.Error("expected non-empty message on decline")
+	}
+}
+
+func TestTorrentRemoveHandler_DeleteLocalData_ElicitCancel(t *testing.T) {
+	client := newMockClient()
+	elicitor := &mockElicitor{
+		result: &mcp.ElicitResult{Action: "cancel"},
+	}
+	handler := tools.NewTorrentRemoveHandlerWithElicitor(client, elicitor)
+
+	params := tools.TorrentRemoveParams{
+		IDs:             []int64{1},
+		DeleteLocalData: true,
+	}
+
+	result, output, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if err != nil {
+		t.Fatalf("handler failed: %v", err)
+	}
+
+	if result != nil && result.IsError {
+		t.Error("expected no error flag on cancel")
+	}
+
+	if output.Message == "" {
+		t.Error("expected non-empty message on cancel")
+	}
+}
+
+func TestTorrentRemoveHandler_DeleteLocalData_ElicitError(t *testing.T) {
+	client := newMockClient()
+	elicitor := &mockElicitor{
+		err: errMock,
+	}
+	handler := tools.NewTorrentRemoveHandlerWithElicitor(client, elicitor)
+
+	params := tools.TorrentRemoveParams{
+		IDs:             []int64{1},
+		DeleteLocalData: true,
+	}
+
+	result, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if err == nil && (result == nil || !result.IsError) {
+		t.Error("expected error when elicitation fails")
+	}
+}
+
+func TestTorrentRemoveHandler_NoDeleteLocalData_SkipsElicitation(t *testing.T) {
+	client := newMockClient()
+	elicitor := &mockElicitor{
+		result: &mcp.ElicitResult{Action: "accept"},
+	}
+	handler := tools.NewTorrentRemoveHandlerWithElicitor(client, elicitor)
+
+	params := tools.TorrentRemoveParams{IDs: []int64{1}}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if err != nil {
+		t.Fatalf("handler failed: %v", err)
+	}
+
+	if elicitor.called {
+		t.Error("elicitation should not be called when deleteLocalData is false")
+	}
 }
 
 func TestTorrentRemoveHandler_Error(t *testing.T) {
@@ -99,4 +179,21 @@ func TestTorrentRemoveHandler_Error(t *testing.T) {
 	if !errors.Is(err, tools.ErrTransmission) {
 		t.Errorf("expected ErrTransmission, got: %v", err)
 	}
+}
+
+// mockElicitor implements tools.Elicitor for testing.
+type mockElicitor struct {
+	result *mcp.ElicitResult
+	err    error
+	called bool
+}
+
+func (m *mockElicitor) Elicit(_ context.Context, _ *mcp.ElicitParams) (*mcp.ElicitResult, error) {
+	m.called = true
+
+	if m.err != nil {
+		return nil, m.err
+	}
+
+	return m.result, nil
 }
