@@ -120,7 +120,10 @@ func TorrentRemoveTool() *mcp.Tool {
 		Name:        "transmission_torrent_remove",
 		Description: "Remove one or more torrents. Set deleteLocalData=true to also delete files from disk (DESTRUCTIVE, requires confirmation via elicitation)",
 		Annotations: &mcp.ToolAnnotations{
-			Title:          "Remove Torrents",
+			Title:           "Remove Torrents",
+			DestructiveHint: ptrTrue(),
+			// Idempotent: removing an already-removed torrent is a no-op in Transmission.
+			// Even with deleteLocalData=true, the second call has no effect (files already gone).
 			IdempotentHint: true,
 		},
 	}

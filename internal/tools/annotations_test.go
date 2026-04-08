@@ -144,9 +144,12 @@ func TestDestructiveTools_HaveAnnotations(t *testing.T) {
 		t.Fatal("torrent_remove: missing Annotations")
 	}
 
-	// DestructiveHint defaults to true when nil, but we want it explicit.
-	if tool.Annotations.DestructiveHint != nil && !*tool.Annotations.DestructiveHint {
-		t.Error("torrent_remove: expected DestructiveHint=true (or nil for default)")
+	if tool.Annotations.DestructiveHint == nil {
+		t.Fatal("torrent_remove: DestructiveHint must be explicitly set (not nil)")
+	}
+
+	if !*tool.Annotations.DestructiveHint {
+		t.Error("torrent_remove: expected DestructiveHint=true")
 	}
 }
 

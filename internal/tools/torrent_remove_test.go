@@ -168,6 +168,21 @@ func TestTorrentRemoveHandler_NoDeleteLocalData_SkipsElicitation(t *testing.T) {
 	}
 }
 
+func TestTorrentRemoveHandler_DeleteLocalData_NilSession(t *testing.T) {
+	client := newMockClient()
+	handler := tools.NewTorrentRemoveHandler(client)
+
+	params := tools.TorrentRemoveParams{
+		IDs:             []int64{1},
+		DeleteLocalData: true,
+	}
+
+	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	if !errors.Is(err, tools.ErrElicitationFailed) {
+		t.Errorf("expected ErrElicitationFailed when session is nil, got: %v", err)
+	}
+}
+
 func TestTorrentRemoveHandler_Error(t *testing.T) {
 	client := newMockClient()
 	client.err = errMock

@@ -42,6 +42,12 @@ func derefInt(ptr *int) int {
 	return 0
 }
 
+func ptrTrue() *bool {
+	v := true
+
+	return &v
+}
+
 func derefStatus(ptr *transmission.TorrentStatus) string {
 	if ptr != nil {
 		return ptr.String()
