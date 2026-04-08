@@ -58,7 +58,7 @@ func TorrentStartTool() *mcp.Tool {
 		Annotations: &mcp.ToolAnnotations{
 			Title:           "Start Torrents",
 			IdempotentHint:  true,
-			DestructiveHint: new(bool),
+			DestructiveHint: ptrBool(false),
 		},
 	}
 }

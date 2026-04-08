@@ -63,7 +63,7 @@ func QueueMoveTool() *mcp.Tool {
 		Annotations: &mcp.ToolAnnotations{
 			Title:           "Move in Queue",
 			IdempotentHint:  true,
-			DestructiveHint: new(bool),
+			DestructiveHint: ptrBool(false),
 		},
 	}
 }

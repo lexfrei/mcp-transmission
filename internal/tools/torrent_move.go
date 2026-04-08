@@ -73,7 +73,7 @@ func TorrentMoveTool() *mcp.Tool {
 		Annotations: &mcp.ToolAnnotations{
 			Title:           "Move Torrents",
 			IdempotentHint:  true,
-			DestructiveHint: new(bool),
+			DestructiveHint: ptrBool(false),
 		},
 	}
 }

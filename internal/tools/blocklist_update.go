@@ -47,7 +47,7 @@ func BlocklistUpdateTool() *mcp.Tool {
 		Annotations: &mcp.ToolAnnotations{
 			Title:           "Update Blocklist",
 			IdempotentHint:  true,
-			DestructiveHint: new(bool),
+			DestructiveHint: ptrBool(false),
 		},
 	}
 }

@@ -51,7 +51,7 @@ func TorrentVerifyTool() *mcp.Tool {
 		Annotations: &mcp.ToolAnnotations{
 			Title:           "Verify Torrents",
 			IdempotentHint:  true,
-			DestructiveHint: new(bool),
+			DestructiveHint: ptrBool(false),
 		},
 	}
 }

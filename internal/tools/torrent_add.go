@@ -88,7 +88,7 @@ func TorrentAddTool() *mcp.Tool {
 		Description: "Add a new torrent by magnet link, URL, or base64-encoded .torrent file content",
 		Annotations: &mcp.ToolAnnotations{
 			Title:           "Add Torrent",
-			DestructiveHint: new(bool),
+			DestructiveHint: ptrBool(false),
 		},
 	}
 }

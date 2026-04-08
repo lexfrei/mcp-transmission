@@ -12,7 +12,7 @@ Built on top of [go-transmission](https://github.com/lexfrei/go-transmission) li
 
 - `transmission_torrent_list` — List all torrents with status, progress, speed
 - `transmission_torrent_add` — Add torrent by magnet link, URL, or base64 .torrent
-- `transmission_torrent_remove` — Remove torrents (optionally delete files)
+- `transmission_torrent_remove` — Remove torrents (optionally delete files; file deletion requires client elicitation support)
 - `transmission_torrent_start` — Start torrents (with queue bypass option)
 - `transmission_torrent_stop` — Stop/pause torrents
 - `transmission_torrent_verify` — Verify local data integrity

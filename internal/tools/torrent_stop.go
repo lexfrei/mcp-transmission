@@ -49,7 +49,7 @@ func TorrentStopTool() *mcp.Tool {
 		Annotations: &mcp.ToolAnnotations{
 			Title:           "Stop Torrents",
 			IdempotentHint:  true,
-			DestructiveHint: new(bool),
+			DestructiveHint: ptrBool(false),
 		},
 	}
 }

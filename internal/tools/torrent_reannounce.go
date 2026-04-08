@@ -51,7 +51,7 @@ func TorrentReannounceTool() *mcp.Tool {
 		Annotations: &mcp.ToolAnnotations{
 			Title:           "Reannounce Torrents",
 			IdempotentHint:  true,
-			DestructiveHint: new(bool),
+			DestructiveHint: ptrBool(false),
 		},
 	}
 }

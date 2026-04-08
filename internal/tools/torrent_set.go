@@ -75,7 +75,7 @@ func TorrentSetTool() *mcp.Tool {
 		Annotations: &mcp.ToolAnnotations{
 			Title:           "Modify Torrent Properties",
 			IdempotentHint:  true,
-			DestructiveHint: new(bool),
+			DestructiveHint: ptrBool(false),
 		},
 	}
 }

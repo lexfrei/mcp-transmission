@@ -19,6 +19,9 @@ var ErrElicitationFailed = errors.New("failed to request deletion confirmation")
 // ErrNoElicitation is returned when no elicitation support is available.
 var ErrNoElicitation = errors.New("no elicitation support available")
 
+// ErrNilElicitResult is returned when the elicitor returns a nil result without an error.
+var ErrNilElicitResult = errors.New("elicitation returned nil result")
+
 // Elicitor abstracts the MCP elicitation capability for testability.
 type Elicitor interface {
 	Elicit(ctx context.Context, params *mcp.ElicitParams) (*mcp.ElicitResult, error)
@@ -111,6 +114,10 @@ func confirmDeletion(
 		return false, errors.Wrap(elicitErr, "elicit call failed")
 	}
 
+	if result == nil {
+		return false, ErrNilElicitResult
+	}
+
 	return result.Action == "accept", nil
 }
 
@@ -121,7 +128,7 @@ func TorrentRemoveTool() *mcp.Tool {
 		Description: "Remove one or more torrents. Set deleteLocalData=true to also delete files from disk (DESTRUCTIVE, requires confirmation via elicitation)",
 		Annotations: &mcp.ToolAnnotations{
 			Title:           "Remove Torrents",
-			DestructiveHint: ptrTrue(),
+			DestructiveHint: ptrBool(true),
 			// Idempotent: removing an already-removed torrent is a no-op in Transmission.
 			// Even with deleteLocalData=true, the second call has no effect (files already gone).
 			IdempotentHint: true,

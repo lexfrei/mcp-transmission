@@ -76,7 +76,7 @@ func SessionSetTool() *mcp.Tool {
 		Annotations: &mcp.ToolAnnotations{
 			Title:           "Modify Session Config",
 			IdempotentHint:  true,
-			DestructiveHint: new(bool),
+			DestructiveHint: ptrBool(false),
 		},
 	}
 }
