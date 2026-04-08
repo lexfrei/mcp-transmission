@@ -44,5 +44,10 @@ func BlocklistUpdateTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "transmission_blocklist_update",
 		Description: "Update the IP blocklist from the configured URL",
+		Annotations: &mcp.ToolAnnotations{
+			Title:           "Update Blocklist",
+			IdempotentHint:  true,
+			DestructiveHint: ptrBool(false),
+		},
 	}
 }

@@ -5,7 +5,7 @@ go 1.26.1
 require (
 	github.com/cockroachdb/errors v1.12.0
 	github.com/lexfrei/go-transmission v0.0.1
-	github.com/modelcontextprotocol/go-sdk v1.4.1
+	github.com/modelcontextprotocol/go-sdk v1.5.0
 	golang.org/x/sync v0.20.0
 )
 

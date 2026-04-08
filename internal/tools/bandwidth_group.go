@@ -47,6 +47,10 @@ func BandwidthGroupGetTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "transmission_bandwidth_group_get",
 		Description: "Get bandwidth group configurations",
+		Annotations: &mcp.ToolAnnotations{
+			Title:        "Bandwidth Group Info",
+			ReadOnlyHint: true,
+		},
 	}
 }
 

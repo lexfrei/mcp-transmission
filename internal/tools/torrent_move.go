@@ -70,5 +70,10 @@ func TorrentMoveTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "transmission_torrent_move",
 		Description: "Move torrent data to a new location on disk",
+		Annotations: &mcp.ToolAnnotations{
+			Title:           "Move Torrents",
+			IdempotentHint:  true,
+			DestructiveHint: ptrBool(false),
+		},
 	}
 }

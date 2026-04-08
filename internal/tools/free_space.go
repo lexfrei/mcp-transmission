@@ -72,5 +72,9 @@ func FreeSpaceTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "transmission_free_space",
 		Description: "Check available disk space at a given path on the Transmission server",
+		Annotations: &mcp.ToolAnnotations{
+			Title:        "Check Free Space",
+			ReadOnlyHint: true,
+		},
 	}
 }

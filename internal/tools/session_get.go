@@ -45,6 +45,10 @@ func SessionGetTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "transmission_session_get",
 		Description: "Get Transmission session configuration: directories, speed limits, encryption, peer settings, etc.",
+		Annotations: &mcp.ToolAnnotations{
+			Title:        "Session Configuration",
+			ReadOnlyHint: true,
+		},
 	}
 }
 

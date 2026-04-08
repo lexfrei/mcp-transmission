@@ -60,6 +60,11 @@ func QueueMoveTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "transmission_queue_move",
 		Description: "Move torrents in the download queue (top, up, down, bottom)",
+		Annotations: &mcp.ToolAnnotations{
+			Title:           "Move in Queue",
+			IdempotentHint:  true,
+			DestructiveHint: ptrBool(false),
+		},
 	}
 }
 

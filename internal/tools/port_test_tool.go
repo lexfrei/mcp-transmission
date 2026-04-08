@@ -43,5 +43,9 @@ func PortTestTool() *mcp.Tool {
 	return &mcp.Tool{
 		Name:        "transmission_port_test",
 		Description: "Test if the Transmission peer port is accessible from the internet",
+		Annotations: &mcp.ToolAnnotations{
+			Title:        "Test Port",
+			ReadOnlyHint: true,
+		},
 	}
 }

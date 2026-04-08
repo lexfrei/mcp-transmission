@@ -42,6 +42,8 @@ func derefInt(ptr *int) int {
 	return 0
 }
 
+func ptrBool(v bool) *bool { return &v }
+
 func derefStatus(ptr *transmission.TorrentStatus) string {
 	if ptr != nil {
 		return ptr.String()
