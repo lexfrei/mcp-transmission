@@ -53,7 +53,7 @@ func TestTorrentRemoveHandler_MissingIDs(t *testing.T) {
 func TestTorrentRemoveHandler_DeleteLocalData_ElicitAccept(t *testing.T) {
 	client := newMockClient()
 	elicitor := &mockElicitor{
-		result: &mcp.ElicitResult{Action: "accept"},
+		result: &mcp.ElicitResult{Action: testActionAccept},
 	}
 	handler := tools.NewTorrentRemoveHandlerWithElicitor(client, elicitor)
 
@@ -195,7 +195,7 @@ func TestTorrentRemoveHandler_DeleteLocalData_ElicitNilResult(t *testing.T) {
 func TestTorrentRemoveHandler_NoDeleteLocalData_SkipsElicitation(t *testing.T) {
 	client := newMockClient()
 	elicitor := &mockElicitor{
-		result: &mcp.ElicitResult{Action: "accept"},
+		result: &mcp.ElicitResult{Action: testActionAccept},
 	}
 	handler := tools.NewTorrentRemoveHandlerWithElicitor(client, elicitor)
 
@@ -271,7 +271,7 @@ func TestTorrentRemoveHandler_DeleteLocalData_NilRequest(t *testing.T) {
 func TestTorrentRemoveHandler_DeleteWithAccept_TransmissionError(t *testing.T) {
 	client := newMockClient()
 	client.err = errMock
-	elicitor := &mockElicitor{result: &mcp.ElicitResult{Action: "accept"}}
+	elicitor := &mockElicitor{result: &mcp.ElicitResult{Action: testActionAccept}}
 	handler := tools.NewTorrentRemoveHandlerWithElicitor(client, elicitor)
 
 	params := tools.TorrentRemoveParams{

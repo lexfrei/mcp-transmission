@@ -14,8 +14,8 @@ func TestFormatBytes_Units(t *testing.T) {
 		{"megabytes", 1572864, "1.50 MB"},
 		{"gigabytes", 1610612736, "1.50 GB"},
 		{"terabytes", 1649267441664, "1.50 TB"},
-		{"negative", -1, "unknown"},
-		{"large negative", -1099511627776, "unknown"},
+		{"negative", -1, statusUnknown},
+		{"large negative", -1099511627776, statusUnknown},
 	}
 
 	for _, tt := range tests {

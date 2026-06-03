@@ -103,7 +103,7 @@ func TestSessionSetHandler_RelativeDownloadDir(t *testing.T) {
 	client := newMockClient()
 	handler := tools.NewSessionSetHandler(client)
 
-	rel := "relative/path"
+	rel := testRelativePath
 	params := tools.SessionSetParams{
 		DownloadDir: &rel,
 	}

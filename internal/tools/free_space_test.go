@@ -21,13 +21,13 @@ func TestFreeSpaceTool_Definition(t *testing.T) {
 func TestFreeSpaceHandler_Success(t *testing.T) {
 	client := newMockClient()
 	client.freeSpaceResult = &transmission.FreeSpace{
-		Path:      "/downloads",
+		Path:      testDownloadDir,
 		SizeBytes: 107374182400,
 	}
 
 	handler := tools.NewFreeSpaceHandler(client)
 
-	params := tools.FreeSpaceParams{Path: "/downloads"}
+	params := tools.FreeSpaceParams{Path: testDownloadDir}
 
 	result, output, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
 	if err != nil {
@@ -38,8 +38,8 @@ func TestFreeSpaceHandler_Success(t *testing.T) {
 		t.Error("expected success")
 	}
 
-	if output.Path != "/downloads" {
-		t.Errorf("expected path /downloads, got %s", output.Path)
+	if output.Path != testDownloadDir {
+		t.Errorf("expected path %s, got %s", testDownloadDir, output.Path)
 	}
 }
 
@@ -61,7 +61,7 @@ func TestFreeSpaceHandler_NilResponse(t *testing.T) {
 
 	handler := tools.NewFreeSpaceHandler(client)
 
-	params := tools.FreeSpaceParams{Path: "/downloads"}
+	params := tools.FreeSpaceParams{Path: testDownloadDir}
 
 	result, output, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
 	if err != nil {
