@@ -53,10 +53,14 @@ func (m *mockClient) TorrentStop(_ context.Context, _ []int64) error {
 }
 
 func (m *mockClient) TorrentVerify(_ context.Context, _ []int64) error {
+	m.lastMethod = "TorrentVerify"
+
 	return m.err
 }
 
 func (m *mockClient) TorrentReannounce(_ context.Context, _ []int64) error {
+	m.lastMethod = "TorrentReannounce"
+
 	return m.err
 }
 
