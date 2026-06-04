@@ -21,7 +21,7 @@ func TestQueueMoveHandler_Top(t *testing.T) {
 	client := newMockClient()
 	handler := tools.NewQueueMoveHandler(client)
 
-	params := tools.QueueMoveParams{IDs: []int64{1}, Action: "top"}
+	params := tools.QueueMoveParams{IDs: []int64{1}, Action: testQueueTop}
 
 	result, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
 	if err != nil {
@@ -34,7 +34,7 @@ func TestQueueMoveHandler_Top(t *testing.T) {
 }
 
 func TestQueueMoveHandler_AllActions(t *testing.T) {
-	actions := []string{"top", "up", "down", "bottom"}
+	actions := []string{testQueueTop, "up", "down", "bottom"}
 
 	for _, action := range actions {
 		t.Run(action, func(t *testing.T) {
@@ -65,7 +65,7 @@ func TestQueueMoveHandler_TransmissionError(t *testing.T) {
 
 	handler := tools.NewQueueMoveHandler(client)
 
-	params := tools.QueueMoveParams{IDs: []int64{1}, Action: "top"}
+	params := tools.QueueMoveParams{IDs: []int64{1}, Action: testQueueTop}
 
 	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
 	if !errors.Is(err, tools.ErrTransmission) {
@@ -89,7 +89,7 @@ func TestQueueMoveHandler_MissingIDs(t *testing.T) {
 	client := newMockClient()
 	handler := tools.NewQueueMoveHandler(client)
 
-	params := tools.QueueMoveParams{Action: "top"}
+	params := tools.QueueMoveParams{Action: testQueueTop}
 
 	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
 	if !errors.Is(err, tools.ErrValidation) {

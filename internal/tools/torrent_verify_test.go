@@ -24,13 +24,21 @@ func TestTorrentVerifyHandler_Success(t *testing.T) {
 
 	params := tools.TorrentVerifyParams{IDs: []int64{1}}
 
-	result, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	result, out, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
 	if err != nil {
 		t.Fatalf("handler failed: %v", err)
 	}
 
 	if result != nil && result.IsError {
 		t.Error("expected success")
+	}
+
+	if out.Message != "Queued verification for 1 torrent(s)" {
+		t.Errorf("expected message %q, got %q", "Queued verification for 1 torrent(s)", out.Message)
+	}
+
+	if client.LastMethod() != "TorrentVerify" {
+		t.Errorf("expected method TorrentVerify, got %s", client.LastMethod())
 	}
 }
 

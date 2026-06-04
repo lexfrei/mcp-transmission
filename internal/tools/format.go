@@ -9,12 +9,15 @@ const (
 	bytesPerTB = bytesPerGB * 1024
 
 	percentMultiplier = 100
+
+	// statusUnknown is returned when a value cannot be formatted meaningfully.
+	statusUnknown = "unknown"
 )
 
 // formatBytes formats bytes into human-readable form.
 func formatBytes(bytes int64) string {
 	if bytes < 0 {
-		return "unknown"
+		return statusUnknown
 	}
 
 	switch {

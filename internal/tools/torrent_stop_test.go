@@ -24,13 +24,21 @@ func TestTorrentStopHandler_Success(t *testing.T) {
 
 	params := tools.TorrentStopParams{IDs: []int64{1}}
 
-	result, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
+	result, out, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
 	if err != nil {
 		t.Fatalf("handler failed: %v", err)
 	}
 
 	if result != nil && result.IsError {
 		t.Error("expected success")
+	}
+
+	if out.Message != "Stopped 1 torrent(s)" {
+		t.Errorf("expected message %q, got %q", "Stopped 1 torrent(s)", out.Message)
+	}
+
+	if client.LastMethod() != "TorrentStop" {
+		t.Errorf("expected method TorrentStop, got %s", client.LastMethod())
 	}
 }
 

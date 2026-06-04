@@ -24,7 +24,7 @@ func TestTorrentListTool_Definition(t *testing.T) {
 func TestTorrentListHandler_Success(t *testing.T) {
 	client := newMockClient()
 	status := transmission.TorrentStatusSeed
-	name := "test-torrent"
+	name := testTorrentName
 	id := int64(1)
 	pct := 1.0
 

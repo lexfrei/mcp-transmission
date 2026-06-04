@@ -11,6 +11,13 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
+// testServerName and testVersion are placeholder MCP server identity values
+// shared across the server tests.
+const (
+	testServerName = "test"
+	testVersion    = "0.0.0"
+)
+
 func TestNewServerOptions(t *testing.T) {
 	opts := newServerOptions()
 
@@ -29,7 +36,7 @@ func TestNewServerOptions(t *testing.T) {
 
 func TestRegisterTools(t *testing.T) {
 	server := mcp.NewServer(
-		&mcp.Implementation{Name: "test", Version: "0.0.0"},
+		&mcp.Implementation{Name: testServerName, Version: testVersion},
 		nil,
 	)
 
@@ -50,7 +57,7 @@ func TestRunHTTPServer_PortInUse(t *testing.T) {
 	addr := listener.Addr().String()
 
 	server := mcp.NewServer(
-		&mcp.Implementation{Name: "test", Version: "0.0.0"},
+		&mcp.Implementation{Name: testServerName, Version: testVersion},
 		nil,
 	)
 
@@ -102,7 +109,7 @@ func TestRunHTTPServer_GracefulShutdown(t *testing.T) {
 	listener.Close()
 
 	server := mcp.NewServer(
-		&mcp.Implementation{Name: "test", Version: "0.0.0"},
+		&mcp.Implementation{Name: testServerName, Version: testVersion},
 		nil,
 	)
 

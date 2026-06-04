@@ -20,7 +20,7 @@ func TestSessionGetTool_Definition(t *testing.T) {
 func TestSessionGetHandler_Success(t *testing.T) {
 	client := newMockClient()
 	version := "4.0.0"
-	downloadDir := "/downloads"
+	downloadDir := testDownloadDir
 
 	client.sessionResult = &transmission.Session{
 		Version:     &version,

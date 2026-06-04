@@ -84,7 +84,7 @@ func TestTorrentMoveHandler_RelativePath(t *testing.T) {
 
 	params := tools.TorrentMoveParams{
 		IDs:      []int64{1},
-		Location: "relative/path",
+		Location: testRelativePath,
 	}
 
 	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)

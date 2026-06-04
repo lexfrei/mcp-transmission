@@ -23,7 +23,7 @@ func TestTorrentAddHandler_Success(t *testing.T) {
 	client.torrentAddResult = &transmission.TorrentAddResult{
 		TorrentAdded: &transmission.TorrentAddedInfo{
 			ID:         1,
-			Name:       "test-torrent",
+			Name:       testTorrentName,
 			HashString: "abc123",
 		},
 	}
@@ -31,7 +31,7 @@ func TestTorrentAddHandler_Success(t *testing.T) {
 	handler := tools.NewTorrentAddHandler(client)
 
 	params := tools.TorrentAddParams{
-		Filename: "magnet:?xt=urn:btih:abc123",
+		Filename: testMagnetURI,
 	}
 
 	result, output, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
@@ -57,7 +57,7 @@ func TestTorrentAddHandler_Duplicate(t *testing.T) {
 	client.torrentAddResult = &transmission.TorrentAddResult{
 		TorrentDuplicate: &transmission.TorrentAddedInfo{
 			ID:         1,
-			Name:       "test-torrent",
+			Name:       testTorrentName,
 			HashString: "abc123",
 		},
 	}
@@ -65,7 +65,7 @@ func TestTorrentAddHandler_Duplicate(t *testing.T) {
 	handler := tools.NewTorrentAddHandler(client)
 
 	params := tools.TorrentAddParams{
-		Filename: "magnet:?xt=urn:btih:abc123",
+		Filename: testMagnetURI,
 	}
 
 	result, output, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
@@ -89,7 +89,7 @@ func TestTorrentAddHandler_NilResponse(t *testing.T) {
 	handler := tools.NewTorrentAddHandler(client)
 
 	params := tools.TorrentAddParams{
-		Filename: "magnet:?xt=urn:btih:abc123",
+		Filename: testMagnetURI,
 	}
 
 	_, output, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
@@ -109,7 +109,7 @@ func TestTorrentAddHandler_BothNilResult(t *testing.T) {
 	handler := tools.NewTorrentAddHandler(client)
 
 	params := tools.TorrentAddParams{
-		Filename: "magnet:?xt=urn:btih:abc123",
+		Filename: testMagnetURI,
 	}
 
 	_, output, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
@@ -129,7 +129,7 @@ func TestTorrentAddHandler_TransmissionError(t *testing.T) {
 	handler := tools.NewTorrentAddHandler(client)
 
 	params := tools.TorrentAddParams{
-		Filename: "magnet:?xt=urn:btih:abc123",
+		Filename: testMagnetURI,
 	}
 
 	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
@@ -157,7 +157,7 @@ func TestTorrentAddHandler_ConflictingParams(t *testing.T) {
 	handler := tools.NewTorrentAddHandler(client)
 
 	params := tools.TorrentAddParams{
-		Filename: "magnet:?xt=urn:btih:abc123",
+		Filename: testMagnetURI,
 		Metainfo: "base64data",
 	}
 
@@ -180,8 +180,8 @@ func TestTorrentAddHandler_RelativeDownloadDir(t *testing.T) {
 	handler := tools.NewTorrentAddHandler(client)
 
 	params := tools.TorrentAddParams{
-		Filename:    "magnet:?xt=urn:btih:abc123",
-		DownloadDir: "relative/path",
+		Filename:    testMagnetURI,
+		DownloadDir: testRelativePath,
 	}
 
 	_, _, err := handler(context.Background(), &mcp.CallToolRequest{}, params)
